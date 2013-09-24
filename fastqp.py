@@ -45,7 +45,12 @@ class read(object):
         return self.__class__(self.name, compseq, self.strand, self.qual)
         
     def pair(self):
-        """ Return 0 1 or 2 depending on whether read is 1 or 2 in a pair, or unpaired (0). """
+        """ Return 0 1 or 2 depending on whether read is 1 or 2 in a pair, or unpaired (0). 
+        
+        >>> x = read(name='@237HTS20:6:1101:19170:2212/1')
+        >>> x.pair()
+        1
+        """
         n = self.name[-2:]
         if n[0] != '/':
             return 0
@@ -58,14 +63,18 @@ class read(object):
         >>> x = read(seq='GCATTA')
         >>> x.gc()
         33
-        
         """
         g = self.seq.count('G')
         c = self.seq.count('C')
         return int(float((g + c)) / len(self) * 100)
     
     def cpg(self):
-        """ Return the number of CpG sites in self.seq """
+        """ Return the number of CpG sites in self.seq 
+        
+        >>> x = read(seq='ATCGTA')
+        >>> x.cpg()
+        1
+        """
         return self.seq.count('CG')
 
 class reader:
