@@ -17,6 +17,7 @@ import matplotlib.pylab as pylab
 import matplotlib.mlab as mlab
 import numpy as np
 import random
+import binascii
 from collections import defaultdict, Counter
         
 class read(object):
@@ -86,7 +87,7 @@ class reader:
     """ 
     A class to read the name, sequence, strand and qualities from a fastq file
     """
-    def __init__(self, filename, format='fastq'):
+    def __init__(self, filename, format='fastq', bincheck=False):
         name, ext = os.path.splitext(filename)
         if ext == '.gz':
             self.file = gzip.open(filename, 'rb')
@@ -97,12 +98,16 @@ class reader:
             self.__iter__ = self._iterfq
         elif format == 'sam':
             self.__iter__ = self._itersam
+        self.bincheck = bincheck
             
     def _iterfq(self):
         """ 
         Return :py:class:`read` object.
         """
+        b = str()
         for i, line in enumerate(self.file):
+            if self.bincheck:
+                b += bin(reduce(lambda x, y: 256*x+y, (ord(c) for c in line), 0))
             if i % 4 == 0:
                 name = line.strip('@\n\r')
             elif i % 4 == 1:
@@ -111,6 +116,9 @@ class reader:
                 strand = line.rstrip()
             elif i % 4 == 3:
                 qualities = line.rstrip('\n\r')
+                if self.bincheck:
+                    yield (int(len(b) / 8), read(name, sequence, strand, qualities))
+                    b = str()
                 yield read(name, sequence, strand, qualities)
 
     def _itersam(self):
