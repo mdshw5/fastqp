@@ -55,8 +55,10 @@ class read(object):
     def gc(self):
         """ Return the GC content of self as an integer 
         
-        >>> read.gc('GCATTA')
-        >>> 33
+        >>> x = read(seq='GCATTA')
+        >>> x.gc()
+        33
+        
         """
         g = self.seq.count('G')
         c = self.seq.count('C')
