@@ -11,7 +11,7 @@ import functools
 import math
 import matplotlib as mpl
 if sys.platform is not 'darwin':
-    matplotlib.use('Agg')
+    mpl.use('Agg')
 import matplotlib.pyplot as plt
 import matplotlib.pylab as pylab
 import matplotlib.mlab as mlab
@@ -345,7 +345,7 @@ def nucplot(positions, nucs, counts, filename, fig_kw):
     colors = [(.5,.5,.5),
               (1,0,0),
               (0,1,0),
-              (0,0,1),
+              (0,.5,1),
               (1,1,0),
               (0,1,1),
               (1,0,1),
@@ -389,6 +389,8 @@ def gcplot(positions, counts, filename, fig_kw):
     tots = [x + y for x,y in zip(gc, at)]
     gcs = [float(n) / m * 100 for n,m in zip(gc, tots)]
     axes.plot(positions, gcs, color=(0.1,0.6,0.8))
+    x1,x2,y1,y2 = axes.axis()
+    axes.axis((x1,x2,0,100))
     axes.set_title('GC content across all bases in all reads')
     axes.set_xlabel('Position in read (bp)')
     axes.set_ylabel('GC (%)')
