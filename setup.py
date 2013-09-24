@@ -9,7 +9,6 @@ config.read('setup.cfg')
 
 if os.path.isdir('.git'):
     __version__ = check_output(["git", "describe", "--tags"])
-    config.add_section('version')
     config.set('version', '__version__', __version__)
     with open('setup.cfg', 'wb') as configfile:
         config.write(configfile)

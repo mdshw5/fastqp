@@ -8,9 +8,12 @@ import os
 import gzip
 import itertools
 import functools
+import math
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import matplotlib.pylab as pylab
+import matplotlib.mlab as mlab
+import numpy as np
 import random
 from collections import defaultdict, Counter
         
@@ -311,14 +314,14 @@ def qualplot(positions, quantiles, filename, fig_kw):
     ax.plot(positions, Q3, color=(1.,.6,0.))
     ax.plot(positions, Q2, color=(1.,.4,0.))
     ax.plot(positions, Q1, color=(1.,.2,0.))
-    ax.plot(positions, Q0, color=(1.,1.,1.))
+    ax.plot(positions, Q2, color='black')
     box = ax.get_position()
     ax.set_position([box.x0, box.y0, box.width * 0.9, box.height])
-    ax.legend(('100%', '75%', '50%', '25%', '0%'), bbox_to_anchor=(1, 0.5), 
+    ax.legend(('100-75%', '75-50%', '50-25%', '25-0%', 'Median'), bbox_to_anchor=(1, 0.5), 
                 fancybox=True, shadow=True, loc='center left')
-    ax.set_title('Quality score percentiles by position in reads')
-    ax.set_xlabel('position')
-    ax.set_ylabel('Phred quality ')
+    ax.set_title('Quality score percentiles across all bases in all reads')
+    ax.set_xlabel('Position in read (bp)')
+    ax.set_ylabel('Quality score percentiles (Phred)')
     plt.savefig(filename + '_quals.png')
 
 def qualdist(qualities, filename, fig_kw):
@@ -330,9 +333,9 @@ def qualdist(qualities, filename, fig_kw):
     for value in values:
         counts = counts + value
     ax.fill_between(counts.keys(), counts.values(), color=(0.1,0.6,0.8))
-    ax.set_title('Quality score distribution')
-    ax.set_xlabel('quality score')
-    ax.set_ylabel('count')
+    ax.set_title('Quality score distribution across all reads')
+    ax.set_xlabel('Mean quality score (Phred)')
+    ax.set_ylabel('Number of reads')
     plt.savefig(filename + '_qualdist.png')
     
 def nucplot(positions, nucs, counts, filename, fig_kw):
@@ -358,9 +361,9 @@ def nucplot(positions, nucs, counts, filename, fig_kw):
     # Shink current axis by 20%
     box = axes.get_position()
     axes.set_position([box.x0, box.y0, box.width * 0.9, box.height])
-    axes.set_title('basecall% by position in read')
-    axes.set_xlabel('position')
-    axes.set_ylabel('basecall percent')
+    axes.set_title('Sequence content across all bases in all reads')
+    axes.set_xlabel('Position in read (bp)')
+    axes.set_ylabel('Sequence content (% basecall)')
     legend = axes.legend(tuple(nucs), bbox_to_anchor=(1, 0.5), 
                 fancybox=True, shadow=True, loc='center left')
     frame = legend.get_frame()
@@ -372,9 +375,9 @@ def nucplot(positions, nucs, counts, filename, fig_kw):
 def depthplot(positions, depths, filename, fig_kw):
     fig, axes = plt.subplots(nrows=1, **fig_kw)
     axes.fill_between(positions, depths, color=(0.1,0.6,0.8))
-    axes.set_title('coverage of each position in read')
-    axes.set_xlabel('position')
-    axes.set_ylabel('depth')
+    axes.set_title('Coverage of each position across all reads')
+    axes.set_xlabel('Position in read (bp)')
+    axes.set_ylabel('Number of reads')
     plt.savefig(filename + '_depth.png')
     
 def gcplot(positions, counts, filename, fig_kw):
@@ -383,18 +386,35 @@ def gcplot(positions, counts, filename, fig_kw):
     at = [c['A'] + c['T'] for c in counts]
     tots = [x + y for x,y in zip(gc, at)]
     gcs = [float(n) / m * 100 for n,m in zip(gc, tots)]
-    axes.plot(positions, gcs)
-    axes.set_title('GC content at each position in read')
-    axes.set_xlabel('position')
-    axes.set_ylabel('gc')
+    axes.plot(positions, gcs, color=(0.1,0.6,0.8))
+    axes.set_title('GC content across all bases in all reads')
+    axes.set_xlabel('Position in read (bp)')
+    axes.set_ylabel('GC (%)')
     plt.savefig(filename + '_gc.png')
     
+def mean(s): return int(float(sum(s)) / len(s))
+    
 def gcdist(counts, filename, fig_kw):
+    m = int(sum([k * v for k,v in zip(counts.keys(), counts.values())]) / sum(counts.values()))
+    variances = [(k - m)**2 for k in counts.keys()]
+    variance = int(sum([k * v for k,v in zip(variances, counts.values())]) / sum(counts.values()))
+    sigma = math.sqrt(variance)
+    x = np.linspace(0,100,100)
     fig, axes = plt.subplots(nrows=1, **fig_kw)
     axes.fill_between(counts.keys(), counts.values(), color=(0.1,0.6,0.8))
-    axes.set_title('GC content distribution')
-    axes.set_xlabel('GC')
-    axes.set_ylabel('counts')
+    axes2 = axes.twinx()
+    axes2.plot(x,mlab.normpdf(x,m,sigma), color='red')
+    axes2.get_yaxis().set_visible(False)
+    handles, labels = axes.get_legend_handles_labels()
+    display = (0,1,2)
+    a = plt.Line2D((0,1),(0,0), color=(0.1,0.6,0.8))
+    b = plt.Line2D((0,1),(0,0), color='red')
+    legend = axes.legend([handle for i,handle in enumerate(handles) if i in display]+[a,b],
+                         [label for i,label in enumerate(labels) if i in display]+['Actual','Theoretical'],
+                fancybox=True, shadow=True)
+    axes.set_title('GC content distribution over all reads')
+    axes.set_xlabel('Mean GC content (%)')
+    axes.set_ylabel('Number of reads')
     plt.savefig(filename + '_gcdist.png')
     
 def window(seq, n=2):
