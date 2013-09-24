@@ -58,7 +58,7 @@ class read(object):
         """ Return the GC content of self as an int """
         g = self.seq.count('G')
         c = self.seq.count('C')
-        return int((g + c) / len(self) * 100)
+        return int(float((g + c)) / len(self) * 100)
     
     def cpg(self):
         """ Return the number of CpG sites in self.seq """
