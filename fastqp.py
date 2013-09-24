@@ -8,8 +8,6 @@ import os
 import gzip
 import itertools
 import functools
-import plots
-import strings
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import matplotlib.pylab as pylab
@@ -55,7 +53,11 @@ class read(object):
             return int(n[1])
             
     def gc(self):
-        """ Return the GC content of self as an int """
+        """ Return the GC content of self as an integer 
+        
+        >>> read.gc('GCATTA')
+        >>> 33
+        """
         g = self.seq.count('G')
         c = self.seq.count('C')
         return int(float((g + c)) / len(self) * 100)
@@ -86,11 +88,11 @@ class reader:
         """
         for i, line in enumerate(self.file):
             if i % 4 == 0:
-                name = line.split()[0].strip()[1:]
+                name = line.strip('@\n\r')
             elif i % 4 == 1:
-                sequence = line.strip()
+                sequence = line.rstrip()
             elif i % 4 == 2:
-                strand = line.strip()
+                strand = line.rstrip()
             elif i % 4 == 3:
                 qualities = line.rstrip('\n\r')
                 yield read(name, sequence, strand, qualities)
@@ -153,7 +155,7 @@ class stats:
         >>> D
         defaultdict(<type 'int'>, {'CTGTGCATGTACTGTACGTGGA': 1, 'ACTGTGCATGTACTGTACGTGG': 1})
         """
-        for kmer in strings.window(string, n=k):
+        for kmer in window(string, n=k):
             D[kmer] += 1
                 
     @staticmethod    
@@ -376,6 +378,17 @@ def gcdist(counts, filename, fig_kw):
     axes.set_xlabel('GC')
     axes.set_ylabel('counts')
     plt.savefig(filename + '_gcdist.png')
+    
+def window(seq, n=2):
+    """ Returns a sliding window (of width n) over data from the iterable
+    s -> (s0,s1,...s[n-1]), (s1,s2,...,sn), ... """
+    it = iter(seq)
+    result = tuple(itertools.islice(it, n))
+    if len(result) == n:
+        yield ''.join(result)
+    for elem in it:
+        result = result[1:] + (elem,)
+        yield ''.join(result)
         
 if __name__ == "__main__":
     import doctest

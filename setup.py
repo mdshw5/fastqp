@@ -5,10 +5,10 @@ from subprocess import check_output
 
 if os.path.isdir('.git'):
     __version__ = check_output(["git", "describe", "--tags"])
-    with open('gemini/__init__.py', 'w') as o:
+    with open('__init__.py', 'w') as o:
         o.write("__version__ = '{0}'".format(__version__.strip()))
 else:
-    with open('gemini/__init__.py', 'w') as o:
+    with open('__init__.py', 'w') as o:
         o.write("__version__ = '{0}'".format('0.1'))
 
 setup(
