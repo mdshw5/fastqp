@@ -10,6 +10,8 @@ import itertools
 import functools
 import math
 import matplotlib as mpl
+if sys.platform is not 'darwin':
+    matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import matplotlib.pylab as pylab
 import matplotlib.mlab as mlab
