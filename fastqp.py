@@ -138,7 +138,7 @@ class reader:
         self.file.close()
 
 class stats:
-    """ Statistics for characterization of GEMINI reads       
+    """ Statistics for characterization of NGS reads       
     """
     def __init__(self):
         self.depth = defaultdict(int)
@@ -150,12 +150,14 @@ class stats:
     def evaluate(self, read):
         """ Evaluate read object at each position, and fill in nuc and qual dictionaries """
         self.gc[read.gc()] += 1
-        self.kmerdict(read.seq, self.kmers, k=5)
         for i,r in enumerate(read):
             i += 1
             self.depth[i] += 1
             self.nuc[i][r.seq] += 1
             self.qual[i][r.qual] += 1
+    
+    def kmercount(self, read, k=5):
+        self.kmerdict(read.seq, self.kmers, k)
     
     @staticmethod            
     def kmerdict(string, D, k):
@@ -244,9 +246,7 @@ class stats:
             line = [self.percentile(v, p) for p in quantile_values]
             quantiles.append(line)
             
-        sys.stdout.write(str(self.kmers.most_common(10)).strip('[]'))
-            
-        if not file:
+        if not filename:
             sys.stdout.write("{pos}\t{dep}\t{qual}\t{base}\n".format(pos='Pos',
                                                                          dep='Depth',
                                                                          base='\t'.join(bases),
@@ -257,6 +257,9 @@ class stats:
                                                             dep=depths[i],
                                                             base=nbasecalls[i],
                                                             qual='\t'.join(map(str, quantiles[i]))))
+            sys.stdout.write('kmer\tcount\n')
+            for key, value in self.kmers.most_common(10):
+                sys.stdout.write(key + '\t' + str(value) + '\n')
                 
         elif filename:
             with open(filename + 'stats.txt', 'w') as out:
@@ -270,6 +273,10 @@ class stats:
                                                                 dep=depths[i],
                                                                 base=nbasecalls[i],
                                                                 qual='\t'.join(map(str, quantiles[i]))))
+                                                                
+                out.write('kmer\tcount\n')
+                for key, value in self.kmers.most_common(10):
+                    out.write(key + '\t' + str(value) + '\n')
                     
             if figures:
                 fig_kw = {'figsize':(10,6)}

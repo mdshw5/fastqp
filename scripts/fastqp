@@ -21,6 +21,8 @@ def run(args):
             read = infile.subsample(n, k)
             if read:
                 stats.evaluate(read)
+                if not args.nokmer:
+                    stats.kmercount(read, args.kmer)
             else:
                 break
             if args.verbose:
@@ -34,8 +36,10 @@ def main():
     parser.add_argument('input', type=str, help="input file (FASTQ or SAM)")
     parser.add_argument('-v', '--verbose', action="store_true", default=False, help="verbose output")
     parser.add_argument('-s', '--sample', type=int, default=100, help='number of reads to sample from')
+    parser.add_argument('-k', '--kmer', type=int, default=5, choices=range(2, 11), help='length of kmer for over-repesented kmer counts')
     parser.add_argument('-o', '--output', type=str, help="base name for output files")
     parser.add_argument('-f', '--figures', action="store_true", default=False, help="produce figures")
+    parser.add_argument('--nokmer', action="store_true", default=False, help="do not count kmers")
     
     args = parser.parse_args()
     run(args)
