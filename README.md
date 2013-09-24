@@ -39,17 +39,17 @@ Usage
 Examples
 --------
 
-![quality percentiles](https://https://github.com/mdshw5/fastqp/master/examples/example_qual.png)
+![quality percentiles](https://github.com/mdshw5/fastqp/master/examples/example_qual.png)
 
-![gc plot](https://https://github.com/mdshw5/fastqp/master/examples/example_gc.png)
+![gc plot](https://github.com/mdshw5/fastqp/master/examples/example_gc.png)
 
-![gc distribution](https://https://github.com/mdshw5/fastqp/master/examples/example_gcdist.png)
+![gc distribution](https://github.com/mdshw5/fastqp/master/examples/example_gcdist.png)
 
-![nucleotide plot](https://https://github.com/mdshw5/fastqp/master/examples/example_nucs.png)
+![nucleotide plot](https://github.com/mdshw5/fastqp/master/examples/example_nucs.png)
 
-![depth plot](https://https://github.com/mdshw5/fastqp/master/examples/example_depth.png)
+![depth plot](https://github.com/mdshw5/fastqp/master/examples/example_depth.png)
 
-![quality distribution](https://https://github.com/mdshw5/fastqp/master/examples/example_qualdist.png)
+![quality distribution](https://github.com/mdshw5/fastqp/master/examples/example_qualdist.png)
 
 ### Tabular output
 
