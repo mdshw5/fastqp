@@ -39,7 +39,7 @@ Usage
 Examples
 --------
 
-![quality percentiles](https://raw.github.com/mdshw5/fastqp/master/examples/example_qual.png)
+![quality percentiles](https://raw.github.com/mdshw5/fastqp/master/examples/example_quals.png)
 
 ![gc plot](https://raw.github.com/mdshw5/fastqp/master/examples/example_gc.png)
 
