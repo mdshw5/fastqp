@@ -1,0 +1,50 @@
+#!/usr/bin/python
+
+from __future__ import division
+import os
+import sys
+import argparse
+import itertools
+import random
+from fastqp import __version__
+
+def run(args):
+    """ read FASTQ or SAM and tabulate basic metrics """
+    p = args.percent
+    k = 1000
+    if k * (p / 100) >= 1:
+        n = int(k * (p / 100))
+    elif k * (p / 100) < 1:
+        sys.exit("Please specify percent > 0.1.\n")
+    
+    with fastqp.reader(args.input) as infile, fastqp.stats() as stats:
+        if args.verbose:
+            report_count = 10000
+            report_times = 1
+        while infile:
+            k = random.choice(xrange(n))
+            read = infile.subsample(n, k)
+            if read:
+                stats.evaluate(read)
+            else:
+                break
+            if args.verbose:
+                if stats.depth[1] / report_count > report_times:
+                    sys.stderr.write("processed {0:.2E} reads\n".format(stats.depth[1]))
+                    report_times += 1
+        stats.summarize(filename=args.filename, figures=args.figures)
+        
+def main():
+    parser = argparse.ArgumentParser(prog='fastqp', description="simple NGS read quality assessment using Python")
+    parser.add_argument('--version', action='version', version="%(prog)s version {0}".format(__version__))
+    parser.add_argument('input', type=str, help="input file (FASTQ or SAM)")
+    parser.add_argument('-v', '--verbose', action="store_true", default=False, help="verbose output")
+    parser.add_argument('-p', '--percent', type=float, help='percent of reads to sample')
+    parser.add_argument('-o', '--output', type=str, help="base name for output files")
+    parser.add_argument('-f', '--figures', action="store_true", default=False, help="produce figures")
+    
+    args = parser.parse_args()
+    run(args)
+
+if __name__ == "__main__": 
+    main()

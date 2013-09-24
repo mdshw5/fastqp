@@ -1,4 +1,4 @@
 fastqp
 ======
 
-simple FASTQ quality assessment using Python
+simple NGS read quality assessment using Python
