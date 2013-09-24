@@ -267,7 +267,7 @@ class stats:
                 sys.stdout.write(key + '\t' + str(value) + '\n')
                 
         elif filename:
-            with open(filename + 'stats.txt', 'w') as out:
+            with open(filename + '_stats.txt', 'w') as out:
                 out.write("{pos}\t{dep}\t{qual}\t{base}\n".format(pos='Pos',
                                                                              dep='Depth',
                                                                              base='\t'.join(bases),
@@ -393,8 +393,6 @@ def gcplot(positions, counts, filename, fig_kw):
     axes.set_xlabel('Position in read (bp)')
     axes.set_ylabel('GC (%)')
     plt.savefig(filename + '_gc.png')
-    
-def mean(s): return int(float(sum(s)) / len(s))
     
 def gcdist(counts, filename, fig_kw):
     m = int(sum([k * v for k,v in zip(counts.keys(), counts.values())]) / sum(counts.values()))
