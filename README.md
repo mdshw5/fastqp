@@ -19,7 +19,7 @@ Installation
     sudo pip install numpy matplotlib
     wget https://github.com/mdshw5/fastqp/archive/v0.1-alpha.zip
     tar -xvzf v0.1-alpha.tar.gz
-    cd fastqp-0.1
+    cd fastqp-v0.1-alpha
     sudo python setup.py install
     
 Usage
