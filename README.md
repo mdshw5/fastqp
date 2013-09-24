@@ -5,18 +5,22 @@ simple NGS read quality assessment using Python
 
 Requirements
 ------------
+
 Python 2.7
+
     - numpy
     - matplotlib
+    
 Tested on Mac OS 10.8 and Linux 2.6.18
     
 Installation
 ------------
-`sudo pip install numpy matplotlib`
-`wget https://github.com/mdshw5/fastqp/archive/fastqp-0.1.tar.gz`
-`tar -xvzf fastqp-0.1.tar.gz`
-`cd fastqp-0.1`
-`sudo python setup.py install`
+
+    sudo pip install numpy matplotlib
+    wget https://github.com/mdshw5/fastqp/archive/v0.1-alpha.zip
+    tar -xvzf v0.1-alpha.tar.gz
+    cd fastqp-0.1
+    sudo python setup.py install
     
 Usage
 -----
