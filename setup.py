@@ -1,15 +1,20 @@
 from distutils.core import setup
+import ConfigParser
 import sys
 import os.path
 from subprocess import check_output
 
+config = ConfigParser.RawConfigParser()
+config.read('setup.cfg')
+
 if os.path.isdir('.git'):
     __version__ = check_output(["git", "describe", "--tags"])
-    with open('__init__.py', 'w') as o:
-        o.write("__version__ = '{0}'".format(__version__.strip()))
+    config.add_section('version')
+    config.set('version', '__version__', __version__)
+    with open('setup.cfg', 'wb') as configfile:
+        config.write(configfile)
 else:
-    with open('__init__.py', 'w') as o:
-        o.write("__version__ = '{0}'".format('0.1'))
+    __version__ = config.get('version', '__version__')
 
 setup(
         name = 'fastqp',
