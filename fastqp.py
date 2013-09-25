@@ -91,6 +91,7 @@ class reader:
         name, ext = os.path.splitext(filename)
         if ext == '.gz':
             self.file = gzip.open(filename, 'rb')
+            self.gzip = True
         else:
             self.file = open(filename, 'r')
         assert format in ['fastq', 'sam']
@@ -119,18 +120,25 @@ class reader:
                 if self.bincheck:
                     yield (int(len(b) / 8), read(name, sequence, strand, qualities))
                     b = str()
-                yield read(name, sequence, strand, qualities)
+                else:
+                    yield read(name, sequence, strand, qualities)
 
     def _itersam(self):
         """ 
         Return :py:class:`read` object.
         """
+        b = str()
         for i, line in enumerate(self.file):
+            if self.bincheck:
+                b += bin(reduce(lambda x, y: 256*x+y, (ord(c) for c in line), 0))
             if line[0] == '@':
                 self.header.append(line.rstrip('\n\r'))
             else:
                 fields = tuple(line.rstrip('\n\r').split('\t'))
-                yield read(fields[0], fields[9], '+', fields[10])
+                if self.bincheck:
+                    yield (int(len(b) / 8), read(fields[0], fields[9], '+', fields[10]))
+                else:
+                    yield read(fields[0], fields[9], '+', fields[10])
 
     def subsample(self, n, k):
         """ Draws n number of reads from self, then returns the kth read. 
