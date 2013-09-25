@@ -7,13 +7,13 @@ import argparse
 import itertools
 import random
 import fastqp
+import math
 
 def mean(s):
     return sum(s) / len(s)
 
 def run(args):
     """ read FASTQ or SAM and tabulate basic metrics """
-    n = args.sample
     bsize = os.path.getsize(args.input)
     
     ## estimate the number of lines in args.input
@@ -29,10 +29,19 @@ def run(args):
     mean_bentry = mean(sample_binsizes)
     mean_len = mean(sample_lengths)
     est_nlines = int(bsize / mean_bentry)
-    sys.stderr.write("At {bytes:.0f} bytes per read of {len:.0f} length we estimate {est:n} reads in input file\n".format(bytes=mean_bentry,
+    sys.stderr.write("At {bytes:.0f} bytes per read of {len:.0f} length we estimate {est:n} reads in input file.\n".format(bytes=mean_bentry,
                                                                                                                len=mean_len,
-                                                                                                               est=est_nlines))
-    
+                                                                                                               est=est_nlines))                                                                                                               
+    ## set up factor for sampling bin size                                                                                                                   
+    if args.sample:
+        n = args.sample
+    else:
+        nf = math.floor(est_nlines / 200000)
+        if nf >=1:
+            n = int(nf)
+        else:
+            n = 1
+    sys.stderr.write("Bin size (-s) set to {binsize:n}.\n".format(binsize=n))        
     with fastqp.reader(args.input) as infile, fastqp.stats() as stats:
         if args.verbose:
             report_count = 10000
@@ -53,10 +62,14 @@ def run(args):
         stats.summarize(filename=args.output, figures=args.figures)
         
 def main():
-    parser = argparse.ArgumentParser(prog='fastqp', description="simple NGS read quality assessment using Python")
+    parser = argparse.ArgumentParser(prog='fastqp', description="simple NGS read quality assessment using Python", 
+                                     epilog=""" Note: fastqp randomly samples ~200,000 reads from the input file by default. 
+                                                To change the number of reads sample, specify the number of reads to bin for 
+                                                sampling. For example, '-s 100' will sample 1 in 100 reads. To evaluate the 
+                                                entire file set '-s 1'. """)
     parser.add_argument('input', type=str, help="input file (FASTQ or SAM, may be gzipped)")
     parser.add_argument('-v', '--verbose', action="store_true", default=False, help="verbose output")
-    parser.add_argument('-s', '--sample', type=int, default=100, help='number of reads to sample from')
+    parser.add_argument('-s', '--sample', type=int, help='number of reads to bin for sampling')
     parser.add_argument('-k', '--kmer', type=int, default=5, choices=range(2, 11), help='length of kmer for over-repesented kmer counts')
     parser.add_argument('-o', '--output', type=str, help="base name for output files")
     parser.add_argument('-f', '--figures', action="store_true", default=False, help="produce figures")
