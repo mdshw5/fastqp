@@ -8,12 +8,14 @@ import itertools
 import random
 import fastqp
 import math
+import time
 
 def mean(s):
     return sum(s) / len(s)
 
 def run(args):
     """ read FASTQ or SAM and tabulate basic metrics """
+    time_start = time.time()
     bsize = os.path.getsize(args.input)
     
     ## estimate the number of lines in args.input
@@ -29,7 +31,7 @@ def run(args):
     mean_bentry = mean(sample_binsizes)
     mean_len = mean(sample_lengths)
     est_nlines = int(bsize / mean_bentry)
-    sys.stderr.write("At {bytes:.0f} bytes per read of {len:.0f} length we estimate {est:n} reads in input file.\n".format(bytes=mean_bentry,
+    sys.stderr.write("At {bytes:.0f} bytes per read of {len:.0f} length we estimate {est:,} reads in input file.\n".format(bytes=mean_bentry,
                                                                                                                len=mean_len,
                                                                                                                est=est_nlines))                                                                                                               
     ## set up factor for sampling bin size                                                                                                                   
@@ -45,7 +47,7 @@ def run(args):
     with fastqp.reader(args.input) as infile, fastqp.stats() as stats:
         if args.verbose:
             report_count = 10000
-            report_times = 1
+        report_times = 1
         while 1:
             k = random.choice(xrange(n))
             read = infile.subsample(n, k)
@@ -57,9 +59,12 @@ def run(args):
                 break
             if args.verbose:
                 if stats.depth[1] / report_count > report_times:
-                    sys.stderr.write("processed {0:.2E} reads\n".format(stats.depth[1]))
-                    report_times += 1
+                    sys.stderr.write("processed {0:,} reads\n".format(stats.depth[1]))
+            report_times += 1
         stats.summarize(filename=args.output, figures=args.figures)
+        time_finish = time.time()
+        sys.stderr.write("There were actually {counts:,} reads in the file. Analysis finished in {sec:.0f} seconds.\n".format(counts=report_times,
+                                                                                                                      sec=time_finish-time_start))
         
 def main():
     parser = argparse.ArgumentParser(prog='fastqp', description="simple NGS read quality assessment using Python", 
