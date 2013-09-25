@@ -48,9 +48,7 @@ def run(args):
     if not args.quiet:
         sys.stderr.write("Bin size (-s) set to {binsize:n}.\n".format(binsize=n))        
     with fastqp.reader(args.input) as infile, fastqp.stats() as stats:
-        if args.verbose:
-            report_count = 10000
-        report_times = 1
+        percent_complete = 10
         while 1:
             k = random.choice(xrange(n))
             read = infile.subsample(n, k)
@@ -60,10 +58,12 @@ def run(args):
                     stats.kmercount(read, args.kmer)
             else:
                 break
-            if args.verbose:
-                if stats.depth[1] / report_count > report_times:
-                    sys.stderr.write("processed {0:,} reads\n".format(stats.depth[1]))
-            report_times += 1
+            if not args.quiet:
+                if (act_nlines / est_nlines) * 100 >= percent_complete:
+                    sys.stderr.write("Approximately {0:n}% complete at read {1:,}: {2}\n".format(percent_complete, act_nlines,
+                                                                                                 time.strftime('%H:%M:%S',
+                                                                                                               time.gmtime(time.time()-time_start))))
+                    percent_complete += 10
             act_nlines += n
         stats.summarize(filename=args.output, figures=args.figures)
         time_finish = time.time()
@@ -81,7 +81,6 @@ def main():
                                                 sampling. For example, '-s 100' will sample 1 in 100 reads. To evaluate the 
                                                 entire file set '-s 1'. """)
     parser.add_argument('input', type=str, help="input file (FASTQ or SAM, may be gzipped)")
-    parser.add_argument('-v', '--verbose', action="store_true", default=False, help="verbose output")
     parser.add_argument('-q', '--quiet', action="store_true", default=False, help="do not print any messages")
     parser.add_argument('-s', '--sample', type=int, help='number of reads to bin for sampling')
     parser.add_argument('-k', '--kmer', type=int, default=5, choices=range(2, 11), help='length of kmer for over-repesented kmer counts')
