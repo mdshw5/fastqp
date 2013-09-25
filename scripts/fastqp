@@ -49,18 +49,14 @@ def run(args):
         sys.stderr.write("Bin size (-s) set to {binsize:n}.\n".format(binsize=n))        
     with fastqp.reader(args.input) as infile, fastqp.stats() as stats:
         percent_complete = 10
-        while 1:
-            k = random.choice(xrange(n))
-            read = infile.subsample(n, k)
-            if read:
-                stats.evaluate(read)
-                if not args.nokmer:
-                    stats.kmercount(read, args.kmer)
-            else:
-                break
+        reads = itertools.islice(infile, None, None, n)
+        for read in reads:
+            stats.evaluate(read)
+            if not args.nokmer:
+                stats.kmercount(read, args.kmer)
             if not args.quiet:
                 if (act_nlines / est_nlines) * 100 >= percent_complete:
-                    sys.stderr.write("Approximately {0:n}% complete at read {1:,}: {2}\n".format(percent_complete, act_nlines,
+                    sys.stderr.write("Approximately {0:n}% complete at read {1:,} in {2}\n".format(percent_complete, act_nlines,
                                                                                                  time.strftime('%H:%M:%S',
                                                                                                                time.gmtime(time.time()-time_start))))
                     percent_complete += 10
@@ -69,7 +65,7 @@ def run(args):
         time_finish = time.time()
         elapsed = time_finish - time_start
         if not args.quiet:
-            sys.stderr.write("There were actually {counts:,} reads in the file. Analysis finished in {sec}.\n".format(counts=act_nlines,
+            sys.stderr.write("There were approximately {counts:,} reads in the file. Analysis finished in {sec}.\n".format(counts=act_nlines,
                                                                                                                       sec=time.strftime('%H:%M:%S',
                                                                                                                           time.gmtime(elapsed))
                                                                                                                           ))
