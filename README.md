@@ -1,7 +1,7 @@
 fastqp
 ======
 
-simple NGS read quality assessment using Python
+Simple FASTQ and SAM read quality assessment and plotting using Python. 
 
 Requirements
 ------------
@@ -16,35 +16,38 @@ Tested on Mac OS 10.8 and Linux 2.6.18
 Installation
 ------------
 
-    sudo pip install numpy matplotlib
-    wget https://github.com/mdshw5/fastqp/archive/v0.1-alpha.zip
-    tar -xvzf v0.1-alpha.tar.gz
-    cd fastqp-v0.1-alpha
-    sudo python setup.py install
+    sudo pip install numpy matplotlib https://github.com/mdshw5/fastqp/archive/master.zip
     
 Usage
 -----
 
-    usage: fastqp [-h] [-v] [-s SAMPLE] [-k {2,3,4,5,6,7,8,9,10}] [-o OUTPUT] [-f]
-                  [--nokmer]
+    usage: fastqp [-h] [-q] [-s SAMPLE] [-k {2,3,4,5,6,7,8,9,10}] [-o OUTPUT]
+                  [-t {sam,fastq}] [-f] [--nokmer]
                   input
     
     simple NGS read quality assessment using Python
     
     positional arguments:
-      input                 input file (FASTQ or SAM)
+      input                 input file(.gz))
     
     optional arguments:
       -h, --help            show this help message and exit
-      -v, --verbose         verbose output
+      -q, --quiet           do not print any messages
       -s SAMPLE, --sample SAMPLE
-                            number of reads to sample from
+                            number of reads to bin for sampling
       -k {2,3,4,5,6,7,8,9,10}, --kmer {2,3,4,5,6,7,8,9,10}
                             length of kmer for over-repesented kmer counts
       -o OUTPUT, --output OUTPUT
                             base name for output files
+      -t {sam,fastq}, --type {sam,fastq}
+                            file type for input file (default=fastq)
       -f, --figures         produce figures
       --nokmer              do not count kmers
+    
+    Note: fastqp randomly samples ~200,000 reads from the input file by default.
+    To change the number of reads sample, specify the number of reads to bin for
+    sampling. For example, '-s 100' will sample 1 in 100 reads. To evaluate the
+    entire file set '-s 1'.
       
 Examples
 --------
