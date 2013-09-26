@@ -76,12 +76,12 @@ def main():
                                                 To change the number of reads sample, specify the number of reads to bin for 
                                                 sampling. For example, '-s 100' will sample 1 in 100 reads. To evaluate the 
                                                 entire file set '-s 1'. """)
-    parser.add_argument('input', type=str, help="input file (FASTQ or SAM, may be gzipped)")
+    parser.add_argument('input', type=str, help="input file(.gz))")
     parser.add_argument('-q', '--quiet', action="store_true", default=False, help="do not print any messages")
     parser.add_argument('-s', '--sample', type=int, help='number of reads to bin for sampling')
     parser.add_argument('-k', '--kmer', type=int, default=5, choices=range(2, 11), help='length of kmer for over-repesented kmer counts')
     parser.add_argument('-o', '--output', type=str, help="base name for output files")
-    parser.add_argument('-t', '--type', type=str, choices=('sam', 'fastq'), help="file type for input file")
+    parser.add_argument('-t', '--type', type=str, default='fastq', choices=('sam', 'fastq'), help="file type for input file (default=fastq)")
     parser.add_argument('-f', '--figures', action="store_true", default=False, help="produce figures")
     parser.add_argument('--nokmer', action="store_true", default=False, help="do not count kmers")
     

@@ -336,8 +336,11 @@ def qualplot(positions, quantiles, filename, fig_kw):
     ax.plot(positions, Q2, color=(1.,.4,0.))
     ax.plot(positions, Q1, color=(1.,.2,0.))
     ax.plot(positions, Q2, color='black')
+    x1,x2,y1,y2 = ax.axis()
+    ax.axis((x1,x2,0,max(Q4)))
     box = ax.get_position()
     ax.set_position([box.x0, box.y0, box.width * 0.9, box.height])
+    ax.yaxis.grid(b=True, which='major', **{'color':'gray', 'linestyle':':'})
     ax.legend(('100-75%', '75-50%', '50-25%', '25-0%', 'Median'), bbox_to_anchor=(1, 0.5), 
                 fancybox=True, shadow=True, loc='center left')
     ax.set_title('Quality score percentiles across all bases in all reads')
@@ -353,15 +356,18 @@ def qualdist(qualities, filename, fig_kw):
     counts = Counter()
     for value in values:
         counts = counts + value
+    ax.plot(counts.keys(), counts.values(), color='black')
     ax.fill_between(counts.keys(), counts.values(), color=(0.1,0.6,0.8))
+    ax.yaxis.grid(b=True, which='major', **{'color':'gray', 'linestyle':':'})
+    ax.set_axisbelow(True)
+    x1,x2,y1,y2 = ax.axis()
+    ax.axis((x1,max(counts.keys()),y1,y2))
     ax.set_title('Quality score distribution across all base positions')
     ax.set_xlabel('Quality score (phred)')
     ax.set_ylabel('Number of positions (bp)')
     plt.savefig(filename + '_qualdist.png')
     
 def qualmap(qualities, filename, fig_kw):
-    for key in qualities.keys():
-        print qualities[key]
     fig = plt.figure(**fig_kw)
     ax = fig.add_subplot(111)
     fig.subplots_adjust(top=0.95)
@@ -378,12 +384,9 @@ def qualmap(qualities, filename, fig_kw):
                 heat_map[q][p] = qualities[p+1][q+1]
             except KeyError:
                 pass
-        sys.stderr.write('\n')
-    for row in heat_map:
-        print row
     imax = ax.imshow(np.array(heat_map), cmap=plt.cm.gist_heat, origin='lower', interpolation='none')
     cbar = fig.colorbar(imax, orientation='horizontal')
-    cbar.ax.set_title('Density')
+    cbar.ax.set_title('counts')
     ax.set_title('Quality score density across all base positions')
     ax.set_xlabel('Position in read (bp)')
     ax.set_ylabel('Quality score (phred)')
@@ -391,41 +394,38 @@ def qualmap(qualities, filename, fig_kw):
     
 def nucplot(positions, nucs, counts, filename, fig_kw):
     max_depth = sum(counts[0].values())
-    colors = [(.5,.5,.5),
-              (1,0,0),
-              (0,1,0),
-              (0,.5,1),
-              (1,1,0),
-              (0,1,1),
-              (1,0,1),
-              (1,1,1),
-              (.5,0,0),
-              (0,.5,0)]
+    cmap = mpl.cm.get_cmap(name='Set1')
+    colors = [cmap(i) for i in np.linspace(0, 1, len(nucs))]
     mpl.rc('axes', color_cycle=colors)
-    fig, axes = plt.subplots(nrows=1, subplot_kw={'axis_bgcolor':'black'}, **fig_kw)
+    fig, axes = plt.subplots(nrows=1, subplot_kw={'axis_bgcolor':'white'}, **fig_kw)
     for i,count in enumerate(counts):
         max_depth = sum(count.values())
         for nuc in nucs:
             counts[i][nuc] = float(count[nuc]) / max_depth * 100
-    for nuc in nucs:
-        axes.plot(positions, [count[nuc] for count in counts])
+    nuc_order = ['A','T','C','G','N','M','R','W','S','Y','K','V','H','D','B']
+    for nuc in nuc_order:
+        if nuc in nucs:
+            axes.plot(positions, [count[nuc] for count in counts])
     # Shink current axis by 20%
     box = axes.get_position()
     axes.set_position([box.x0, box.y0, box.width * 0.9, box.height])
+    axes.yaxis.grid(b=True, which='major', **{'color':'gray', 'linestyle':':'})
+    axes.set_axisbelow(True)
     axes.set_title('Sequence content across all bases in all reads')
     axes.set_xlabel('Position in read (bp)')
-    axes.set_ylabel('Sequence content (% basecall)')
-    legend = axes.legend(tuple(nucs), bbox_to_anchor=(1, 0.5), 
+    axes.set_ylabel('Sequence content (% basecall)')     
+    legend = axes.legend(tuple((n for n in nuc_order if n in nucs)), bbox_to_anchor=(1, 0.5), 
                 fancybox=True, shadow=True, loc='center left')
     frame = legend.get_frame()
-    frame.set_facecolor('black')
+    frame.set_facecolor('white')
     for label in legend.get_texts():
-        label.set_color('white')
+        label.set_color('black')
     plt.savefig(filename + '_nucs.png')
     
 def depthplot(positions, depths, filename, fig_kw):
     fig, axes = plt.subplots(nrows=1, **fig_kw)
-    axes.fill_between(positions, depths, color=(0.1,0.6,0.8))
+    axes.plot(positions, depths, color=(0.1,0.6,0.8))
+    axes.yaxis.grid(b=True, which='major', **{'color':'gray', 'linestyle':':'})
     axes.set_title('Coverage of each position across all reads')
     axes.set_xlabel('Position in read (bp)')
     axes.set_ylabel('Number of reads')
@@ -440,6 +440,8 @@ def gcplot(positions, counts, filename, fig_kw):
     axes.plot(positions, gcs, color=(0.1,0.6,0.8))
     x1,x2,y1,y2 = axes.axis()
     axes.axis((x1,x2,0,100))
+    axes.yaxis.grid(b=True, which='major', **{'color':'gray', 'linestyle':':'})
+    axes.set_axisbelow(True)
     axes.set_title('GC content across all bases in all reads')
     axes.set_xlabel('Position in read (bp)')
     axes.set_ylabel('GC (%)')
@@ -452,6 +454,7 @@ def gcdist(counts, filename, fig_kw):
     sigma = math.sqrt(variance)
     x = np.linspace(0,100,100)
     fig, axes = plt.subplots(nrows=1, **fig_kw)
+    axes.plot(counts.keys(), counts.values(), color='black')
     axes.fill_between(counts.keys(), counts.values(), color=(0.1,0.6,0.8))
     axes2 = axes.twinx()
     axes2.plot(x,mlab.normpdf(x,m,sigma), color='red')
@@ -463,6 +466,8 @@ def gcdist(counts, filename, fig_kw):
     legend = axes.legend([handle for i,handle in enumerate(handles) if i in display]+[a,b],
                          [label for i,label in enumerate(labels) if i in display]+['Actual','Theoretical'],
                 fancybox=True, shadow=True)
+    axes.yaxis.grid(b=True, which='major', **{'color':'gray', 'linestyle':':'})
+    axes.set_axisbelow(True)
     axes.set_title('GC content distribution over all reads')
     axes.set_xlabel('Mean GC content (%)')
     axes.set_ylabel('Number of reads')
