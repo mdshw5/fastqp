@@ -22,7 +22,7 @@ def run(args):
     current_entry = int()
     sample_lengths = list()
     sample_binsizes = list()
-    with fastqp.reader(args.input, bincheck=True) as infile:
+    with fastqp.reader(args.input, format=args.type, bincheck=True) as infile:
         while current_entry < 1000:
             line = iter(infile).next()
             sample_lengths.append(len(line[1]))
@@ -47,7 +47,7 @@ def run(args):
             n = 1
     if not args.quiet:
         sys.stderr.write("Bin size (-s) set to {binsize:n}.\n".format(binsize=n))        
-    with fastqp.reader(args.input) as infile, fastqp.stats() as stats:
+    with fastqp.reader(args.input, format=args.type) as infile, fastqp.stats() as stats:
         percent_complete = 10
         reads = itertools.islice(infile, None, None, n)
         for read in reads:
@@ -81,6 +81,7 @@ def main():
     parser.add_argument('-s', '--sample', type=int, help='number of reads to bin for sampling')
     parser.add_argument('-k', '--kmer', type=int, default=5, choices=range(2, 11), help='length of kmer for over-repesented kmer counts')
     parser.add_argument('-o', '--output', type=str, help="base name for output files")
+    parser.add_argument('-t', '--type', type=str, choices=('sam', 'fastq'), help="file type for input file")
     parser.add_argument('-f', '--figures', action="store_true", default=False, help="produce figures")
     parser.add_argument('--nokmer', action="store_true", default=False, help="do not count kmers")
     

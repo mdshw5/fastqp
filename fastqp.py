@@ -16,6 +16,7 @@ import matplotlib.pyplot as plt
 import matplotlib.pylab as pylab
 import matplotlib.mlab as mlab
 import numpy as np
+import array
 import random
 import binascii
 from collections import defaultdict, Counter
@@ -100,6 +101,7 @@ class reader:
         elif format == 'sam':
             self.__iter__ = self._itersam
         self.bincheck = bincheck
+        self.header = list()
             
     def _iterfq(self):
         """ 
@@ -303,6 +305,7 @@ class stats:
                 fig_kw = {'figsize':(10,6)}
                 qualplot(positions, quantiles, filename, fig_kw)
                 qualdist(self.qual.values(), filename, fig_kw)
+                qualmap(self.qual, filename, fig_kw)
                 depthplot(positions, depths, filename, fig_kw)
                 gcplot(positions, self.nuc.values(), filename, fig_kw)
                 gcdist(self.gc, filename, fig_kw)
@@ -339,7 +342,7 @@ def qualplot(positions, quantiles, filename, fig_kw):
                 fancybox=True, shadow=True, loc='center left')
     ax.set_title('Quality score percentiles across all bases in all reads')
     ax.set_xlabel('Position in read (bp)')
-    ax.set_ylabel('Quality score percentiles (Phred)')
+    ax.set_ylabel('Quality score percentiles (phred)')
     plt.savefig(filename + '_quals.png')
 
 def qualdist(qualities, filename, fig_kw):
@@ -351,10 +354,40 @@ def qualdist(qualities, filename, fig_kw):
     for value in values:
         counts = counts + value
     ax.fill_between(counts.keys(), counts.values(), color=(0.1,0.6,0.8))
-    ax.set_title('Quality score distribution across all reads')
-    ax.set_xlabel('Mean quality score (Phred)')
-    ax.set_ylabel('Number of reads')
+    ax.set_title('Quality score distribution across all base positions')
+    ax.set_xlabel('Quality score (phred)')
+    ax.set_ylabel('Number of positions (bp)')
     plt.savefig(filename + '_qualdist.png')
+    
+def qualmap(qualities, filename, fig_kw):
+    for key in qualities.keys():
+        print qualities[key]
+    fig = plt.figure(**fig_kw)
+    ax = fig.add_subplot(111)
+    fig.subplots_adjust(top=0.95)
+    values = map(Counter, qualities.values())
+    counts = Counter()
+    for value in values:
+        counts = counts + value
+    max_qual = max(counts.keys())
+    max_pos = max(qualities.keys())
+    heat_map = np.zeros((max_qual, max_pos))
+    for p in range(max_pos):
+        for q in range(max_qual):
+            try:
+                heat_map[q][p] = qualities[p+1][q+1]
+            except KeyError:
+                pass
+        sys.stderr.write('\n')
+    for row in heat_map:
+        print row
+    imax = ax.imshow(np.array(heat_map), cmap=plt.cm.gist_heat, origin='lower', interpolation='none')
+    cbar = fig.colorbar(imax, orientation='horizontal')
+    cbar.ax.set_title('Density')
+    ax.set_title('Quality score density across all base positions')
+    ax.set_xlabel('Position in read (bp)')
+    ax.set_ylabel('Quality score (phred)')
+    plt.savefig(filename + '_qualmap.png')
     
 def nucplot(positions, nucs, counts, filename, fig_kw):
     max_depth = sum(counts[0].values())
