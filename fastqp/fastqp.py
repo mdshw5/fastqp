@@ -36,25 +36,6 @@ class Fastq(object):
         assert isinstance(seq, tuple)
         assert isinstance(qual, tuple)
 
-    def __iter__(self):
-        return self
-        
-    def next(self):
-        if self.i < len(self):
-            value, self.i = self[self.i], self.i + 1
-            return value
-        else:
-            raise StopIteration()
-
-    def __getitem__(self, key):
-        if self.meth:
-            return self.__class__(self.name, tuple(self.seq[key]), self.strand, tuple(self.qual[key]), tuple(self.meth[key]))
-        else:
-            return self.__class__(self.name, tuple(self.seq[key]), self.strand, tuple(self.qual[key]))
-            
-    def __next__(self):
-        return self.next()
-
     def __repr__(self):
         if self.meth:
             return '\n'.join([self.name, ''.join(self.seq), self.strand, ''.join(self.qual), ''.join(self.meth)])
@@ -63,83 +44,6 @@ class Fastq(object):
 
     def __len__(self):
         return len(self.seq)
-
-    def reverse(self):
-        """ Returns reverse ordered self
-        >>> x = Fastq(name='test', seq=tuple('TTTTTATGGAGGTATTGAGAACGTAAGATGTTTGGATAT'),qual=tuple('#######EC4<?4A<+EFB@GHC<9FAA+DDCAFFC=22'),meth=tuple('000010000221002102000250020210002202210'))
-        >>> x.reverse()
-        test
-        TATAGGTTTGTAGAATGCAAGAGTTATGGAGGTATTTTT
-        +
-        22=CFFACDD+AAF9<CHG@BFE+<A4?<4CE#######
-        012202200012020052000201200122000010000
-
-        """
-        if self.meth:
-            return self.__class__(self.name, self.seq[::-1], self.strand, self.qual[::-1], self.meth[::-1])
-        else:
-            return self.__class__(self.name, self.seq[::-1], self.strand, self.qual[::-1])
-
-    def complement(self):
-        """ Returns the compliment of self. This only affects the sequence slot.
-        >>> x = Fastq(name='test', seq=tuple('TTTTTATGGAGGTATTGAGAACGTAAGATGTTTGGATAT'),qual=tuple('#######EC4<?4A<+EFB@GHC<9FAA+DDCAFFC=22'),meth=tuple('000010000221002102000250020210002202210'))
-        >>> x.complement()
-        test
-        AAAAATACCTCCATAACTCTTGCATTCTACAAACCTATA
-        +
-        #######EC4<?4A<+EFB@GHC<9FAA+DDCAFFC=22
-        000010000221002102000250020210002202210
-
-        """
-        seqtable = str.maketrans('ACTGNRYSWKM',
-                              'TGACNYRSWKM')
-        contable = str.maketrans('ACTGNRYSWKMswkmXx',
-                              'TGACNYRswkmSWKMxX')
-        if self.meth:
-            return self.__class__(self.name, tuple(''.join(self.seq).translate(seqtable)), self.strand, self.qual, 
-                tuple(''.join(self.meth).translate(seqtable)))
-        else:
-            return self.__class__(self.name, tuple(''.join(self.seq).translate(seqtable)), self.strand, self.qual, self.meth)
-
-    def revcomplement(self):
-        """ Take the reverse compliment of self.
-        >>> x = Fastq(name='test', seq=tuple('TTTTTATGGAGGTATTGAGAACGTAAGATGTTTGGATAT'),qual=tuple('#######EC4<?4A<+EFB@GHC<9FAA+DDCAFFC=22'),meth=tuple('000010000221002102000250020210002202210'))
-        >>> x.revcomplement()
-        test
-        ATATCCAAACATCTTACGTTCTCAATACCTCCATAAAAA
-        +
-        22=CFFACDD+AAF9<CHG@BFE+<A4?<4CE#######
-        012202200012020052000201200122000010000
-
-        """
-        return self.reverse().complement()
-
-    def pair(self):
-        """ Return 0 1 or 2 depending on whether read is 1 or 2 in a pair, or unpaired (0).
-
-        """
-        n = self.name[-2:]
-        if n[0] != '/':
-            return 0
-        else:
-            return int(n[1])
-
-    def safename(self):
-        """Return self.name without paired-end identifier if it exists"""
-        if self.name[-2] == '/':
-            return self.name[:-2]
-        else:
-            return self.name
-
-    def gc(self):
-        """ Return the GC content of self as an int
-        >>> x = Fastq(name='test', seq=tuple('TTTTTATGGAGGTATTGAGAACGTAAGATGTTTGGATAT'),qual=tuple('#######EC4<?4A<+EFB@GHC<9FAA+DDCAFFC=22'),meth=tuple('000010000221002102000250020210002202210'))
-        >>> x.gc()
-        30
-        """
-        g = self.seq.count('G')
-        c = self.seq.count('C')
-        return int((g + c) / len(self) * 100)
         
 class Sam(object):
     """ Store fields in each line of a SAM file, provided as a tuple. """
@@ -160,6 +64,7 @@ class Sam(object):
         self.mapped = False if self.rname == '*' else True
         self.secondary = True if self.get_tag('XS') else False
         self.reverse = True if self.flag == 16 else False
+        self.i = int()
 
     def __gt__(self, other):
         if self.rname != other.rname:
@@ -192,7 +97,16 @@ class Sam(object):
 
     def __len__(self):
         return len(self.seq)
-
+        
+    def get_tag(self, tag):
+        """ Return the data encoded in SAM tag as a string """
+        assert tag == str(tag)
+        tags = [t[0:2] for t in self.tags]
+        try:
+            return str(self.tags[tags.index(tag)])
+        except ValueError:
+            return None
+            
 class Reader:
     """ 
     Read either a fastq or sam file and return an iterator.
@@ -267,17 +181,20 @@ class Stats:
         self.gc = defaultdict(int)
         self.kmers = Counter(defaultdict(int))
             
-    def evaluate(self, read):
+    def evaluate(self, seq, qual):
         """ Evaluate read object at each position, and fill in nuc and qual dictionaries """
-        self.gc[read.gc()] += 1
-        for i,r in enumerate(read):
+        self.gc[gc(seq)] += 1
+        for i, s, q in zip(range(len(seq)), seq, qual):
             i += 1
             self.depth[i] += 1
-            self.nuc[i][r.seq[0]] += 1
-            self.qual[i][r.qual[0]] += 1
-    
-    def kmercount(self, read, k=5):
-        kmerdict(''.join(read.seq), self.kmers, k)
+            self.nuc[i][s[0]] += 1
+            self.qual[i][q[0]] += 1
+            
+    def kmercount(self, seq, k=5):
+        """ Count all kmers of k length in seq and update kmer counter.
+        """
+        for kmer in window(seq, n=k):
+            self.kmers[kmer] += 1
 
     def __enter__(self):
         return self
@@ -285,16 +202,16 @@ class Stats:
     def __exit__(self, *args):
         pass
     
-def kmerdict(string, D, k):
-    """ Count all kmers of k length in string and return a dictionary.
-    D: a defaultdict(int) to update
-    >>> D = defaultdict(int)
-    >>> stats.kmerdict('ACTGTGCATGTACTGTACGTGGA', D, 22)
-    >>> D
-    defaultdict(<type 'int'>, {'CTGTGCATGTACTGTACGTGGA': 1, 'ACTGTGCATGTACTGTACGTGG': 1})
+            
+def gc(seq):
+    """ Return the GC content of as an int
+    >>> x = tuple('TTTTTATGGAGGTATTGAGAACGTAAGATGTTTGGATAT')
+    >>> gc(x)
+    30
     """
-    for kmer in window(string, n=k):
-        D[kmer] += 1
+    g = seq.count('G')
+    c = seq.count('C')
+    return int((g + c) / len(seq) * 100)
     
 def padbases(bases):
     """For each base call in dictionary D, add an entry base:0 if key base does not exist."""
@@ -431,16 +348,16 @@ def qualmap(qualities, filename, fig_kw):
     plt.savefig(filename + '_qualmap.png')
     
 def nucplot(positions, nucs, counts, filename, fig_kw):
+    nuc_order = ['A','T','C','G','N','M','R','W','S','Y','K','V','H','D','B']
     max_depth = sum(tuple(counts[1].values()))
     cmap = mpl.cm.get_cmap(name='Set1')
-    colors = [cmap(i) for i in np.linspace(0, 1, len(nucs))]
+    colors = [cmap(i) for i in np.linspace(0, 1, len(nuc_order))]
     mpl.rc('axes', color_cycle=colors)
     fig, axes = plt.subplots(nrows=1, subplot_kw={'axis_bgcolor':'white'}, **fig_kw)
     for pos, count in tuple(counts.items()):
         max_depth = sum(tuple(count.values()))
         for nuc in nucs:
             counts[pos][nuc] = float(count[nuc]) / max_depth * 100
-    nuc_order = ['A','T','C','G','N','M','R','W','S','Y','K','V','H','D','B']
     for nuc in nuc_order:
         if nuc in nucs:
             axes.plot(positions, [count[nuc] for count in counts.values()])

@@ -33,6 +33,8 @@ def run(args):
                 line = header + seq + strand + qual
             elif args.type == 'sam':
                 line = next(infile)
+                if line[0] == '@':
+                    continue
                 read = Sam(tuple(line.rstrip('\n\r').split('\t')))
                 seq_len = len(read)
             blen = bin(reduce(lambda x, y: 256*x+y, (ord(c) for c in line), 0))
@@ -62,9 +64,9 @@ def run(args):
         percent_complete = 10
         reads = itertools.islice(infile, None, None, n)
         for read in reads:
-            stats.evaluate(read)
+            stats.evaluate(read.seq, read.qual)
             if not args.nokmer:
-                stats.kmercount(read, args.kmer)
+                stats.kmercount(read.seq, k=args.kmer)
             if not args.quiet:
                 if (act_nlines / est_nlines) * 100 >= percent_complete:
                     sys.stderr.write("Approximately {0:n}% complete at read {1:,} in {2}\n".format(percent_complete, act_nlines,
