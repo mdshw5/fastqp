@@ -33,7 +33,7 @@ Usage
     simple NGS read quality assessment using Python
     
     positional arguments:
-      input                 input file(.gz))
+      input                 input file (.fastq or .sam)
     
     optional arguments:
       -h, --help            show this help message and exit
@@ -45,9 +45,7 @@ Usage
                             length of kmer for over-repesented kmer counts
                             (default: 5)
       -o OUTPUT, --output OUTPUT
-                            base name for output files
-      -t {sam,fastq}, --type {sam,fastq}
-                            file type for input file (default: fastq)
+                            base name for output files (default: plot)
       -f, --figures         produce figures (default: True)
       --nokmer              do not count kmers (default: False)
       

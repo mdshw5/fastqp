@@ -111,13 +111,12 @@ class Reader:
     """ 
     Read either a fastq or sam file and return an iterator.
     """
-    def __init__(self, filename, format='fastq'):
+    def __init__(self, filename):
         name, ext = os.path.splitext(filename)
-        assert format in ['fastq', 'sam']
-        if format == 'fastq':
+        if ext == '.fastq':
             self.next = self.fq_next
             self.file = open(filename, 'r')
-        elif format == 'sam':
+        elif ext == '.sam':
             self.header = []
             with open(filename, 'r') as samfile:
                 for line in samfile:
@@ -128,7 +127,6 @@ class Reader:
             self.file = open(filename, 'r')
             self.header = tuple(next(self.file) for i in range(len(self.header))) ## consume header lines    
             self.next = self.sam_next
-            
             
     def __next__(self):
         return self.next()

@@ -22,16 +22,19 @@ def run(args):
     current_entry = int()
     sample_lengths = list()
     sample_binsizes = list()
+    name, ext = os.path.splitext(args.input)
+    if not ext in ['.fastq', '.sam']:
+        sys.exit("Input file must end in either .fastq or .sam")
     with open(args.input, 'r') as infile:
         while current_entry < 1000:
-            if args.type == 'fastq':
+            if ext == '.fastq':
                 header = next(infile)
                 seq = next(infile)
                 strand = next(infile)
                 qual = next(infile)
                 seq_len = len(seq)
                 line = header + seq + strand + qual
-            elif args.type == 'sam':
+            elif ext == '.sam':
                 line = next(infile)
                 if line[0] == '@':
                     continue
@@ -60,7 +63,7 @@ def run(args):
             n = 1
     if not args.quiet:
         sys.stderr.write("Bin size (-s) set to {binsize:n}.\n".format(binsize=n))        
-    with Reader(args.input, format=args.type) as infile, Stats() as stats:
+    with Reader(args.input) as infile, Stats() as stats:
         percent_complete = 10
         reads = itertools.islice(infile, None, None, n)
         for read in reads:
@@ -145,12 +148,11 @@ def run(args):
         
 def main():
     parser = argparse.ArgumentParser(prog='fastqp', description="simple NGS read quality assessment using Python")
-    parser.add_argument('input', type=str, help="input file(.gz))")
+    parser.add_argument('input', type=str, help="input file (.fastq or .sam)")
     parser.add_argument('-q', '--quiet', action="store_true", default=False, help="do not print any messages (default: %(default)s)")
     parser.add_argument('-s', '--sample', type=int, help='number of reads to bin for sampling (default: auto sample 200,000 reads)')
     parser.add_argument('-k', '--kmer', type=int, default=5, choices=range(2, 11), help='length of kmer for over-repesented kmer counts (default: %(default)s)')
-    parser.add_argument('-o', '--output', type=str, help="base name for output files")
-    parser.add_argument('-t', '--type', type=str, default='fastq', choices=('sam', 'fastq'), help="file type for input file (default: %(default)s)")
+    parser.add_argument('-o', '--output', type=str, help="base name for output files (default: plot)")
     parser.add_argument('-f', '--figures', action="store_true", default=True, help="produce figures (default: %(default)s)")
     parser.add_argument('--nokmer', action="store_true", default=False, help="do not count kmers (default: %(default)s)")
     
