@@ -9,7 +9,7 @@ Features
 - Requires only Python with Numpy and Matplotlib libraries
 - Tabular output statistics so you can create your own graphs
 - A useful set of default graphics rivaling comparable QC packages
-- Counts **all* IPUAC ambiguous nucleotide codes (NMWSK) if present in sequences
+- Counts *all* IPUAC ambiguous nucleotide codes (NMWSK) if present in sequences
 - Randomly downsamples input files to around 200,000 reads (user adjustable)
 
 Requirements
