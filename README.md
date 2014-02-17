@@ -15,11 +15,8 @@ Features
 Requirements
 ------------
 
-Python 3.3
+Tested on Python 2.6, 2.7, 3.2, 3.3
 
-    - numpy
-    - matplotlib
-    
 Tested on Mac OS 10.9 and Linux 2.6.18
     
 Installation

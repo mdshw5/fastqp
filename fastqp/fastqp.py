@@ -419,8 +419,7 @@ def gcdist(counts, filename, fig_kw):
     a = plt.Line2D((0,1),(0,0), color=(0.1,0.6,0.8))
     b = plt.Line2D((0,1),(0,0), color='red')
     legend = axes.legend([handle for i,handle in enumerate(handles) if i in display]+[a,b],
-                         [label for i,label in enumerate(labels) if i in display]+['Actual','Theoretical'],
-                fancybox=True, shadow=True)
+                         [label for i,label in enumerate(labels) if i in display]+['Actual','Theoretical'])
     axes.yaxis.grid(b=True, which='major', **{'color':'gray', 'linestyle':':'})
     axes.set_axisbelow(True)
     axes.set_title('Read GC content distribution')

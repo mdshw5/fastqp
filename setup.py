@@ -6,7 +6,7 @@ import os
 setup(
         name = 'fastqp',
         provides = 'fastqp',
-        version = "1.0.0",
+        version = "0.1.0",
         author = 'Matthew Shirley',
         author_email = 'mdshw5@gmail.com',
         url = 'http://mattshirley.com',
@@ -21,6 +21,9 @@ setup(
                 "Intended Audience :: Science/Research",
                 "Natural Language :: English",
                 "Operating System :: Unix",
+                "Programming Language :: Python :: 2.6",
+                "Programming Language :: Python :: 2.7",
+                "Programming Language :: Python :: 3.2",
                 "Programming Language :: Python :: 3.3",
                 "Topic :: Scientific/Engineering :: Bio-Informatics"
         ]
