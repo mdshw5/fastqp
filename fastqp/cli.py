@@ -59,9 +59,7 @@ def run(args):
     elif ext == '.bam':
         est_nlines = sum(bam_read_count(args.input.name))
         if not args.quiet:
-            sys.stderr.write("{est:,} reads in input file.\n".format(bytes=mean_bentry,
-                                                                len=mean_len,
-                                                                est=est_nlines))
+            sys.stderr.write("{est:,} reads in input file.\n".format(est=est_nlines))
     elif ext == '.gz':
         if args.sample:
             n = args.sample
