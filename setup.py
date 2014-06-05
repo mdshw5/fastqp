@@ -6,7 +6,7 @@ import os
 setup(
         name = 'fastqp',
         provides = 'fastqp',
-        version = "0.1.0",
+        version = "0.1.1",
         author = 'Matthew Shirley',
         author_email = 'mdshw5@gmail.com',
         url = 'http://mattshirley.com',

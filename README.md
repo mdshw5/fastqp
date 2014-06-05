@@ -1,7 +1,7 @@
 fastqp
 ======
 
-Simple FASTQ and SAM read quality assessment and plotting using Python. 
+Simple FASTQ and SAM read quality assessment and plotting using Python.
 
 Features
 --------
@@ -18,34 +18,35 @@ Requirements
 Tested on Python 2.6, 2.7, 3.2, 3.3
 
 Tested on Mac OS 10.9 and Linux 2.6.18
-    
+
 Installation
 ------------
 
-    pip install numpy matplotlib https://github.com/mdshw5/fastqp/archive/master.zip
-    
+    pip install matplotlib https://github.com/mdshw5/fastqp/archive/master.zip
+
 Usage
 -----
 
     simple NGS read quality assessment using Python
-    
+
     positional arguments:
-      input                 input file (.fastq or .sam)
-    
+      input                 input file (one of .sam, .bam, or .fastq(.gz) )
+
     optional arguments:
       -h, --help            show this help message and exit
       -q, --quiet           do not print any messages (default: False)
       -s SAMPLE, --sample SAMPLE
                             number of reads to bin for sampling (default: auto
-                            sample 200,000 reads)
+                            sample ~200,000 reads)
       -k {2,3,4,5,6,7,8,9,10}, --kmer {2,3,4,5,6,7,8,9,10}
                             length of kmer for over-repesented kmer counts
                             (default: 5)
       -o OUTPUT, --output OUTPUT
                             base name for output files (default: plot)
-      -f, --figures         produce figures (default: True)
+      --nofigures           don't produce figures (default: False)
       --nokmer              do not count kmers (default: False)
-      
+      --mbias               make mbias plot for GEMINI reads (default: False)
+
 Examples
 --------
 
@@ -177,9 +178,9 @@ Examples
     CACTG	3046
     TGACC	2739
     CTTTA	2693
-    
+
 Acknowledgements
 ----------------
-This project is freely licensed by the author, [Matthew Shirley](http://mattshirley.com), and was completed under the mentorship 
-and financial support of Drs. [Sarah Wheelan](http://sjwheelan.som.jhmi.edu) and [Vasan Yegnasubramanian](http://yegnalab.onc.jhmi.edu) at 
+This project is freely licensed by the author, [Matthew Shirley](http://mattshirley.com), and was completed under the mentorship
+and financial support of Drs. [Sarah Wheelan](http://sjwheelan.som.jhmi.edu) and [Vasan Yegnasubramanian](http://yegnalab.onc.jhmi.edu) at
 the Sidney Kimmel Comprehensive Cancer Center in the Department of Oncology.
