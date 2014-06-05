@@ -702,6 +702,7 @@ def gcdist(counts, filename, fig_kw):
 
 
 def mbiasplot(positions, conv_dict, filename, fig_kw):
+    print(conv_dict)
     methyl_values = [(conv_dict[pos]['G'] + conv_dict[pos]['C']) / sum(conv_dict[pos].values()) for pos in positions]
     fig, axes = plt.subplots(nrows=1, **fig_kw)
     axes.plot(positions, methyl_values, color='red')
