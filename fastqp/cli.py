@@ -18,6 +18,7 @@ def run(args):
     est_counter = int()
     sample_lengths = list()
     sample_binsizes = list()
+    act_nlines = int()
     name, ext = os.path.splitext(args.input.name)
 
     if ext not in ['.fastq', '.sam', '.bam', '.gz']:
@@ -52,7 +53,6 @@ def run(args):
         mean_bentry = mean(sample_binsizes)
         mean_len = mean(sample_lengths)
         est_nlines = int(bsize / mean_bentry)
-        act_nlines = int()
 
         if not args.quiet:
             sys.stderr.write("At {bytes:.0f} bytes per read of {len:.0f} length "
