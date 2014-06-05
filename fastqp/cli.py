@@ -47,12 +47,14 @@ def run(args):
             n = args.sample
         else:
             n = 1
+            binary = True
             if not args.quiet:
                 sys.stderr.write("Bin size (-s) set to {binsize:n}.\n".format(binsize=n))
     else:
         mean_bentry = mean(sample_binsizes)
         mean_len = mean(sample_lengths)
         est_nlines = int(bsize / mean_bentry)
+        binary = False
 
         if not args.quiet:
             sys.stderr.write("At {bytes:.0f} bytes per read of {len:.0f} length "
@@ -90,7 +92,7 @@ def run(args):
         if not args.nokmer:
             stats.kmercount(read.seq, k=args.kmer)
 
-        if not args.quiet:
+        if not args.quiet and not binary:
             if (act_nlines / est_nlines) * 100 >= percent_complete:
                 sys.stderr.write("Approximately {0:n}% complete at "
                                  "read {1:,} in {2}\n".format(percent_complete,
