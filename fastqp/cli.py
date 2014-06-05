@@ -49,7 +49,7 @@ def run(args):
             n = 1
             binary = True
             if not args.quiet:
-                sys.stderr.write("Bin size (-s) set to {binsize:n}.\n".format(binsize=n))
+                sys.stderr.write("Binary file detected, bin size (-s) set to {binsize:n}.\n".format(binsize=n))
     else:
         mean_bentry = mean(sample_binsizes)
         mean_len = mean(sample_lengths)
