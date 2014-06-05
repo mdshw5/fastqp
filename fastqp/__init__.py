@@ -435,7 +435,7 @@ def bam_read_count(bamfile):
     p = Popen(['samtools', 'idxstats', bamfile], stdout=PIPE)
     mapped = 0
     unmapped = 0
-    for line in p:
+    for line in p.stdout:
         rname, rlen, nm, nu = line.rstrip().split()
         mapped += nm
         unmapped += nu
