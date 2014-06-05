@@ -702,11 +702,11 @@ def gcdist(counts, filename, fig_kw):
 
 
 def mbiasplot(positions, conv_dict, filename, fig_kw):
-    methyl_values = [(conv_dict[pos]['G'] + conv_dict[pos]['C']) / (conv_dict[pos]['R'] + conv_dict[pos]['Y'] + conv_dict[pos]['G'] + conv_dict[pos]['C']) * 100 for pos in positions]
+    methyl_values = [(conv_dict[pos]['G'] + conv_dict[pos]['C']) / (conv_dict[pos]['R'] + conv_dict[pos]['Y'] + conv_dict[pos]['G'] + conv_dict[pos]['C']) for pos in positions]
     fig, axes = plt.subplots(nrows=1, **fig_kw)
     axes.plot(positions, methyl_values, color='red')
     x1,x2,y1,y2 = axes.axis()
-    axes.axis((x1,positions[-1],0,100))
+    axes.axis((x1,positions[-1],0,1))
     axes.yaxis.grid(b=True, which='major', **{'color':'gray', 'linestyle':':'})
     axes.set_axisbelow(True)
     axes.set_title('Methylation bias (M-Bias)')
