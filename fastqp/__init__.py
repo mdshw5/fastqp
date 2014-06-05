@@ -437,8 +437,8 @@ def bam_read_count(bamfile):
     unmapped = 0
     for line in p.stdout:
         rname, rlen, nm, nu = line.rstrip().split()
-        mapped += nm
-        unmapped += nu
+        mapped += int(nm)
+        unmapped += int(nu)
     return (mapped, unmapped)
 
 
