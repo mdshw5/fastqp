@@ -711,7 +711,7 @@ def mbiasplot(positions, conv_dict, filename, fig_kw):
     axes.set_axisbelow(True)
     axes.set_title('Methylation bias (M-Bias)')
     axes.set_xlabel('Cycle')
-    axes.set_ylabel('Methylation% at cycle')
+    axes.set_ylabel('Bias')
     plt.savefig(filename + '_mbias.png')
 
 
