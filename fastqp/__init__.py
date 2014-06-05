@@ -430,6 +430,18 @@ class Stats:
         pass
 
 
+def bam_read_count(bamfile):
+    """ Return a tuple of the number of mapped and unmapped reads in a bam file """
+    p = Popen(['samtools', 'idxstats', bamfile], stdout=PIPE)
+    mapped = 0
+    unmapped = 0
+    for line in p:
+        rname, rlen, nm, nu = line.rstrip().split()
+        mapped += nm
+        unmapped += nu
+    return (mapped, unmapped)
+
+
 def parse_sam_tags(tagfields):
     """ Return a dictionary containing the tags """
     return dict((tag, (dtype, data)) for tag, dtype, data in (decode_tag(x) for x in tagfields))

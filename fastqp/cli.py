@@ -32,6 +32,14 @@ def run(args):
                 est_counter += 1
                 if est_counter == 10000:
                     break
+            mean_bentry = mean(sample_binsizes)
+            mean_len = mean(sample_lengths)
+            est_nlines = int(bsize / mean_bentry)
+            if not args.quiet:
+                sys.stderr.write("At {bytes:.0f} bytes per read of {len:.0f} length "
+                "we estimate {est:,} reads in input file.\n".format(bytes=mean_bentry,
+                                                                    len=mean_len,
+                                                                    est=est_nlines))
     elif ext  == '.sam':
         with Reader(open(args.input.name)) as fh:
             for read in fh:
@@ -40,39 +48,39 @@ def run(args):
                 est_counter += 1
                 if est_counter == 10000:
                     break
-    if ext in ['.bam', '.gz']:
-        if args.sample:
+            mean_bentry = mean(sample_binsizes)
+            mean_len = mean(sample_lengths)
+            est_nlines = int(bsize / mean_bentry)
             if not args.quiet:
-                sys.stderr.write("Binary file detected, using supplied bin size of {:n}\n".format(args.sample))
+                sys.stderr.write("At {bytes:.0f} bytes per read of {len:.0f} length "
+                "we estimate {est:,} reads in input file.\n".format(bytes=mean_bentry,
+                                                                    len=mean_len,
+                                                                    est=est_nlines))
+    elif ext == '.bam':
+        est_nlines = sum(bam_read_count(args.input.name))
+        if not args.quiet:
+            sys.stderr.write("{est:,} reads in input file.\n".format(bytes=mean_bentry,
+                                                                len=mean_len,
+                                                                est=est_nlines))
+    elif ext == '.gz':
+        if args.sample:
             n = args.sample
         else:
             n = 1
-            binary = True
             if not args.quiet:
-                sys.stderr.write("Binary file detected, bin size (-s) set to {binsize:n}.\n".format(binsize=n))
+                sys.stderr.write("Gzipped file detected, bin size (-s) set to {binsize:n}.\n".format(binsize=n))
+
+    # set up factor for sampling bin size
+    if args.sample:
+        n = args.sample
     else:
-        mean_bentry = mean(sample_binsizes)
-        mean_len = mean(sample_lengths)
-        est_nlines = int(bsize / mean_bentry)
-        binary = False
-
-        if not args.quiet:
-            sys.stderr.write("At {bytes:.0f} bytes per read of {len:.0f} length "
-            "we estimate {est:,} reads in input file.\n".format(bytes=mean_bentry,
-                                                                len=mean_len,
-                                                                est=est_nlines))
-
-        # set up factor for sampling bin size
-        if args.sample:
-            n = args.sample
+        nf = math.floor(est_nlines / 200000)
+        if nf >= 1:
+            n = int(nf)
         else:
-            nf = math.floor(est_nlines / 200000)
-            if nf >= 1:
-                n = int(nf)
-            else:
-                n = 1
-        if not args.quiet:
-            sys.stderr.write("Bin size (-s) set to {binsize:n}.\n".format(binsize=n))
+            n = 1
+    if not args.quiet:
+        sys.stderr.write("Bin size (-s) set to {binsize:n}.\n".format(binsize=n))
 
     if ext in ['.sam', '.bam']:
         infile = Reader(args.input)
@@ -92,7 +100,7 @@ def run(args):
         if not args.nokmer:
             stats.kmercount(read.seq, k=args.kmer)
 
-        if not args.quiet and not binary:
+        if not args.quiet and ext != '.gz':
             if (act_nlines / est_nlines) * 100 >= percent_complete:
                 sys.stderr.write("Approximately {0:n}% complete at "
                                  "read {1:,} in {2}\n".format(percent_complete,
