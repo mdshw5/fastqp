@@ -415,7 +415,7 @@ class Stats:
             self.nuc[i][seq[i-1]] += 1
             self.qual[i][qual[i-1]] += 1
             if conv:
-                self.conv[i][conv[i-1]]
+                self.conv[i][conv[i-1]] += 1
 
     def kmercount(self, seq, k=5):
         """ Count all kmers of k length in seq and update kmer counter.
@@ -702,7 +702,6 @@ def gcdist(counts, filename, fig_kw):
 
 
 def mbiasplot(positions, conv_dict, filename, fig_kw):
-    print(conv_dict)
     methyl_values = [(conv_dict[pos]['G'] + conv_dict[pos]['C']) / sum(conv_dict[pos].values()) for pos in positions]
     fig, axes = plt.subplots(nrows=1, **fig_kw)
     axes.plot(positions, methyl_values, color='red')
