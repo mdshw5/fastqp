@@ -10,7 +10,7 @@ setup(
         url = 'http://mattshirley.com',
         description = 'Simple NGS read quality assessment using Python',
         license = 'MIT',
-        packages = ['fastqp'],
+        packages = ['fastqp', 'fastqp.backports'],
         install_requires=['six', 'matplotlib', 'numpy'],
         entry_points = { 'console_scripts': [ 'fastqp = fastqp.cli:main' ] },
         classifiers = [

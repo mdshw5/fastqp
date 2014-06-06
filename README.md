@@ -1,5 +1,7 @@
 fastqp
 ======
+[![Build Status](https://travis-ci.org/mdshw5/fastqp.svg?)](https://travis-ci.org/mdshw5/fastqp)
+[![PyPI](https://img.shields.io/pypi/v/fastqp.svg?)](https://pypi.python.org/pypi/fastqp)
 
 Simple FASTQ and SAM read quality assessment and plotting using Python.
 
