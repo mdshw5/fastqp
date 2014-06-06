@@ -734,10 +734,10 @@ def mean(s):
 def cpg_map(seq):
     """ Return tuple of C/G/N.
 
-    >>> cpg_map('NCGCGTAGCCGN')
+    >>> cpg_map('CGCGTAGCCG')
     ('C', 'G', 'C', 'G', 'N', 'N', 'N', 'N', 'C', 'G')
     """
-    starts = (x.start() for x in re.finditer('CG', ''.join(seq)))
+    starts = (x.start() for x in re.finditer('CG', ''.join(['N', seq, 'N'])))
     cpgs = ['N'] * len(seq)
     for start in starts:
         cpgs[start] = 'C'
