@@ -133,7 +133,7 @@ class Fastq(object):
 
 class Sam(object):
     """ Store fields in each line of a SAM file, provided as a tuple. """
-    __slots__ = ['qname', 'flag', 'rname', 'pos', 'mapq', 'cigar', 'rnext', 'pnext', 'tlen', '_seq', '_qual', 'tags', '_tags', '_cigars']
+    __slots__ = ['qname', 'flag', 'rname', 'pos', 'mapq', 'cigar', 'rnext', 'pnext', 'tlen', 'seq', 'qual', 'tags', '_tags', '_cigars']
 
     def __init__(self, fields):
         self.qname = fields[0]
@@ -145,8 +145,8 @@ class Sam(object):
         self.rnext = fields[6]
         self.pnext = int(fields[7])
         self.tlen = int(fields[8])
-        self._seq = fields[9]
-        self._qual = fields[10]
+        self.seq = fields[9]
+        self.qual = fields[10]
         self.tags = None
         self._tags = fields[11:]
         self._cigars = None
@@ -209,16 +209,8 @@ class Sam(object):
             yield int("".join(n)), "".join(next(cig_iter)[1])
 
     @property
-    def seq(self):
-        return self.gapped(self._seq)
-
-    @property
-    def qual(self):
-        return self.gapped(self._qual, gap_char='!')
-
-    @property
     def conv(self):
-        return self.gapped(self['YM'])
+        return self.self['YM']
 
     @property
     def cigars(self):
@@ -263,14 +255,6 @@ class Sam(object):
     @property
     def coords(self):
         return range(self.pos, self.pos + len(self))
-
-    @property
-    def safename(self):
-        """Return self.qname without paired-end identifier if it exists"""
-        if self.qname[-2] == '/':
-            return self.qname[:-2]
-        else:
-            return self.qname
 
 
 class FastqReader:
