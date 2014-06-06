@@ -281,7 +281,12 @@ class FastqReader:
             seq = next(self.file).strip()
             strand = next(self.file).strip()
             qual = next(self.file).strip()
-            return Fastq(name=name, seq=seq, strand=strand, qual=qual)
+            if name.count(':YM:Z:') > 0:
+                tag, dtype, data = name.split(':')[-3:]
+                name = ':'.join(name.split(':')[:-3])
+                return Fastq(name=name, seq=seq, strand=strand, qual=qual, conv=data)
+            else:
+                return Fastq(name=name, seq=seq, strand=strand, qual=qual)
         except StopIteration:
             raise StopIteration
 
@@ -735,7 +740,7 @@ def cpg_map(seq):
     """ Return tuple of C/G/N.
 
     >>> cpg_map('CGCGTAGCCG')
-    'CGCGNNNNCG''
+    'CGCGNNNNCG'
     """
     starts = (x.start() for x in re.finditer('CG', ''.join(['N', seq, 'N'])))
     cpgs = ['N'] * (len(seq) + 2)
