@@ -394,11 +394,13 @@ class Stats:
     def evaluate(self, seq, qual, conv=None):
         """ Evaluate read object at each position, and fill in nuc and qual dictionaries """
         self.gc[gc(seq)] += 1
+        if conv:
+            cpgs = cpg_map(seq)
         for i in range(1, len(seq) + 1):
             self.depth[i] += 1
             self.nuc[i][seq[i-1]] += 1
             self.qual[i][qual[i-1]] += 1
-            if conv:
+            if conv and (cpgs[i-1] != 'N'):
                 self.conv[i][conv[i-1]] += 1
 
     def kmercount(self, seq, k=5):
@@ -725,6 +727,20 @@ def window(seq, n=2):
 
 def mean(s):
     return sum(s) / len(s)
+
+
+def cpg_map(seq):
+    """ Return tuple of C/G/N.
+
+    >>> cpg_map('NCGCGTAGCCGN')
+    ('C', 'G', 'C', 'G', 'N', 'N', 'N', 'N', 'C', 'G')
+    """
+    starts = (x.start() for x in re.finditer('CG', ''.join(seq)))
+    cpgs = ['N'] * len(seq)
+    for start in starts:
+        cpgs[start] = 'C'
+        cpgs[start+1] = 'G'
+    return ''.join(cpgs[1:-1])
 
 
 if __name__ == "__main__":
