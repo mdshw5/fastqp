@@ -65,8 +65,8 @@ def run(args):
             n = args.binsize
         else:
             n = 1
-            if not args.quiet:
-                sys.stderr.write("Gzipped file detected, bin size (-s) set to {binsize:n}.\n".format(binsize=n))
+        if not args.quiet:
+            sys.stderr.write("Gzipped file detected, bin size (-s) set to {binsize:n}.\n".format(binsize=n))
 
     if ext != '.gz':
         # set up factor for sampling bin size
