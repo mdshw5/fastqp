@@ -5,6 +5,7 @@ Classes and functions for quality assessment of FASTQ and SAM format NGS reads
 from __future__ import division
 import sys
 import os
+import re
 from six.moves import range, zip, map
 from six import string_types
 import math
