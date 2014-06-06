@@ -11,6 +11,7 @@ setup(
         description = 'Simple NGS read quality assessment using Python',
         license = 'MIT',
         packages = ['fastqp'],
+        install_requires=['six', 'matplotlib', 'numpy'],
         entry_points = { 'console_scripts': [ 'fastqp = fastqp.cli:main' ] },
         classifiers = [
                 "Development Status :: 4 - Beta",
