@@ -210,7 +210,7 @@ class Sam(object):
 
     @property
     def conv(self):
-        return self.self['YM']
+        return self['YM']
 
     @property
     def cigars(self):
