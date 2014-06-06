@@ -20,7 +20,7 @@ from collections import defaultdict
 try:
     from collections import Counter
 except:
-    from gemstone.backports import Counter
+    from fastqp.backports import Counter
 from subprocess import Popen, PIPE
 from io import TextIOWrapper
 
