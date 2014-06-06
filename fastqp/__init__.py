@@ -742,7 +742,7 @@ def cpg_map(seq):
     for start in starts:
         cpgs[start] = 'C'
         cpgs[start+1] = 'G'
-    return ''.join(cpgs)
+    return ''.join(cpgs[1:-1])
 
 
 if __name__ == "__main__":
