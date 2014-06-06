@@ -738,11 +738,11 @@ def cpg_map(seq):
     ('C', 'G', 'C', 'G', 'N', 'N', 'N', 'N', 'C', 'G')
     """
     starts = (x.start() for x in re.finditer('CG', ''.join(['N', seq, 'N'])))
-    cpgs = ['N'] * len(seq)
+    cpgs = ['N'] * (len(seq) + 2)
     for start in starts:
         cpgs[start] = 'C'
         cpgs[start+1] = 'G'
-    return ''.join(cpgs[1:-1])
+    return ''.join(cpgs)
 
 
 if __name__ == "__main__":
