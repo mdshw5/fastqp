@@ -6,7 +6,6 @@ import argparse
 import itertools
 import math
 import time
-from functools import reduce
 from fastqp import *
 
 

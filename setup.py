@@ -1,12 +1,10 @@
-from setuptools import setup, Extension
-import distutils.core
-import sys
-import os
+from setuptools import setup
+
 
 setup(
         name = 'fastqp',
         provides = 'fastqp',
-        version = "0.1.1",
+        version = "0.1.0",
         author = 'Matthew Shirley',
         author_email = 'mdshw5@gmail.com',
         url = 'http://mattshirley.com',
@@ -15,7 +13,7 @@ setup(
         packages = ['fastqp'],
         entry_points = { 'console_scripts': [ 'fastqp = fastqp.cli:main' ] },
         classifiers = [
-                "Development Status :: 3 - Alpha",
+                "Development Status :: 4 - Beta",
                 "License :: OSI Approved :: MIT License",
                 "Environment :: Console",
                 "Intended Audience :: Science/Research",
@@ -25,6 +23,7 @@ setup(
                 "Programming Language :: Python :: 2.7",
                 "Programming Language :: Python :: 3.2",
                 "Programming Language :: Python :: 3.3",
+                "Programming Language :: Python :: 3.4",
                 "Topic :: Scientific/Engineering :: Bio-Informatics"
         ]
 )
