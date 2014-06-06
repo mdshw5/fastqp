@@ -401,8 +401,9 @@ class Stats:
             self.depth[i] += 1
             self.nuc[i][seq[i-1]] += 1
             self.qual[i][qual[i-1]] += 1
-            if conv and (cpgs[i-1] != 'N'):
-                self.conv[i][conv[i-1]] += 1
+            if conv:
+                if cpgs[i-1] != 'N':
+                    self.conv[i][conv[i-1]] += 1
 
     def kmercount(self, seq, k=5):
         """ Count all kmers of k length in seq and update kmer counter.
