@@ -61,18 +61,18 @@ def run(args):
         if not args.quiet:
             sys.stderr.write("{est:,} reads in input file.\n".format(est=est_nlines))
     elif ext == '.gz':
-        if args.sample:
-            n = args.sample
+        if args.binsize:
+            n = args.binsize
         else:
             n = 1
             if not args.quiet:
                 sys.stderr.write("Gzipped file detected, bin size (-s) set to {binsize:n}.\n".format(binsize=n))
 
     # set up factor for sampling bin size
-    if args.sample:
-        n = args.sample
+    if args.binsize:
+        n = args.binsize
     else:
-        nf = math.floor(est_nlines / 200000)
+        nf = math.floor(est_nlines / args.nreads)
         if nf >= 1:
             n = int(nf)
         else:
@@ -181,7 +181,8 @@ def main():
     parser = argparse.ArgumentParser(prog='fastqp', description="simple NGS read quality assessment using Python")
     parser.add_argument('input', type=argparse.FileType('r'), help="input file (one of .sam, .bam, or .fastq(.gz) )")
     parser.add_argument('-q', '--quiet', action="store_true", default=False, help="do not print any messages (default: %(default)s)")
-    parser.add_argument('-s', '--sample', type=int, help='number of reads to bin for sampling (default: auto sample ~200,000 reads)')
+    parser.add_argument('-s', '--binsize', type=int, help='number of reads to bin for sampling (default: auto)')
+    parser.add_argument('-n', '--nreads', type=int, default=2000000, help='number of reads sample from input (default: %(default)s)')
     parser.add_argument('-k', '--kmer', type=int, default=5, choices=range(2, 11), help='length of kmer for over-repesented kmer counts (default: %(default)s)')
     parser.add_argument('-o', '--output', type=str, help="base name for output files (default: plot)")
     parser.add_argument('--nofigures', action="store_true", default=False, help="don't produce figures (default: %(default)s)")
