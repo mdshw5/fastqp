@@ -735,7 +735,7 @@ def cpg_map(seq):
     """ Return tuple of C/G/N.
 
     >>> cpg_map('CGCGTAGCCG')
-    ('C', 'G', 'C', 'G', 'N', 'N', 'N', 'N', 'C', 'G')
+    'CGCGNNNNCG''
     """
     starts = (x.start() for x in re.finditer('CG', ''.join(['N', seq, 'N'])))
     cpgs = ['N'] * (len(seq) + 2)
