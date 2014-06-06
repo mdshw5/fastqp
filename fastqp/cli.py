@@ -68,17 +68,18 @@ def run(args):
             if not args.quiet:
                 sys.stderr.write("Gzipped file detected, bin size (-s) set to {binsize:n}.\n".format(binsize=n))
 
-    # set up factor for sampling bin size
-    if args.binsize:
-        n = args.binsize
-    else:
-        nf = math.floor(est_nlines / args.nreads)
-        if nf >= 1:
-            n = int(nf)
+    if ext != '.gz':
+        # set up factor for sampling bin size
+        if args.binsize:
+            n = args.binsize
         else:
-            n = 1
-    if not args.quiet:
-        sys.stderr.write("Bin size (-s) set to {binsize:n}.\n".format(binsize=n))
+            nf = math.floor(est_nlines / args.nreads)
+            if nf >= 1:
+                n = int(nf)
+            else:
+                n = 1
+        if not args.quiet:
+            sys.stderr.write("Bin size (-s) set to {binsize:n}.\n".format(binsize=n))
 
     if ext in ['.sam', '.bam']:
         infile = Reader(args.input)
