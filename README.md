@@ -7,22 +7,25 @@ Features
 --------
 
 - Requires only Python with Numpy and Matplotlib libraries
+- Works with (gzipped) FASTQ, SAM, and BAM formatted reads
 - Tabular output statistics so you can create your own graphs
 - A useful set of default graphics rivaling comparable QC packages
-- Counts *all* IPUAC ambiguous nucleotide codes (NMWSK) if present in sequences
-- Randomly downsamples input files to around 200,000 reads (user adjustable)
+- Counts *all* IPUAC ambiguous nucleotide codes (NMWSKRY) if present in sequences
+- Downsamples input files to around 2,000,000 reads (user adjustable)
 
 Requirements
 ------------
 
-Tested on Python 2.6, 2.7, 3.2, 3.3
+Tested on Python 2.6, 2.7, 3.2, 3.3, 3.4
 
 Tested on Mac OS 10.9 and Linux 2.6.18
 
 Installation
 ------------
 
-    pip install matplotlib https://github.com/mdshw5/fastqp/archive/master.zip
+    pip install fastqp
+
+Note: BAM file support requires [samtools](http://samtools.sourceforge.net)
 
 Usage
 -----
@@ -35,9 +38,10 @@ Usage
     optional arguments:
       -h, --help            show this help message and exit
       -q, --quiet           do not print any messages (default: False)
-      -s SAMPLE, --sample SAMPLE
-                            number of reads to bin for sampling (default: auto
-                            sample ~200,000 reads)
+      -s BINSIZE, --binsize BINSIZE
+                            number of reads to bin for sampling (default: auto)
+      -n NREADS, --nreads NREADS
+                            number of reads sample from input (default: 2000000)
       -k {2,3,4,5,6,7,8,9,10}, --kmer {2,3,4,5,6,7,8,9,10}
                             length of kmer for over-repesented kmer counts
                             (default: 5)

@@ -1,0 +1,19 @@
+language: python
+python:
+- '3.4'
+- '3.3'
+- '3.2'
+- '2.7'
+- '2.6'
+- pypy
+install:
+- pip install -e .
+script: nosetests
+deploy:
+  provider: pypi
+  user: mdshw5
+  password:
+    secure: WaAW6Vk1yjC851PKaeiJGNyZ6wZ2baqlixUSvRDXoT673yFrlp32IMHofmP/TwVxnLMfQxhAb3r7dYYDYnNw4n3vPInJ+Yy35RG1WQ2XUOpOEZ8n2fWczxKfkJjQ5ob03DCSFPeL5h+FYfyHRAfPb9K8OtEawKRvCfaUXE0teko=
+  on:
+    tags: true
+    repo: mdshw5/fastqp
