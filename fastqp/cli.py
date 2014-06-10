@@ -90,13 +90,26 @@ def run(args):
     reads = itertools.islice(infile, None, None, n)
 
     for read in reads:
-        if args.mbias:
-            stats.evaluate(read.seq, read.qual, read.conv)
+        if ext in ['.sam', '.bam']:
+            if read.reverse:
+                conv = read.conv[::-1]
+                seq = read.seq[::-1]
+                qual = read.qual[::-1]
+            else:
+                conv = read.conv
+                seq = read.seq
+                qual = read.qual
         else:
-            stats.evaluate(read.seq, read.qual)
+            conv = read.conv
+            seq = read.seq
+            qual = read.qual
+        if args.mbias:
+            stats.evaluate(seq, qual, conv)
+        else:
+            stats.evaluate(seq, qual)
 
         if not args.nokmer:
-            stats.kmercount(read.seq, k=args.kmer)
+            stats.kmercount(seq, k=args.kmer)
 
         if not args.quiet and ext != '.gz':
             if (act_nlines / est_nlines) * 100 >= percent_complete:
