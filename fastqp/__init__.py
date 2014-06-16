@@ -294,17 +294,24 @@ class FastqReader:
         except StopIteration:
             raise StopIteration
 
-    def subsample(self, n, k):
-        """ Draws n number of reads from self, then returns the kth read.
-        Supply a random k for random sampling. """
-        z = None
-        for i, x in zip(range(n), self):
-            if i == k:
-                z = x
-        if z:
-            return z
-        else:
-            return None
+    def subsample(self, n):
+        """ Draws every nth read from self. Returns Fastq. """
+        n = n * 4
+        for i, line in enumerate(self.file):
+            if i % n == 0:
+                name = line.strip().split()[0]
+            elif i % n == 1:
+                seq = line.strip()
+            elif i % n == 2:
+                strand = line.strip()
+            elif i % n == 3:
+                qual = line.strip()
+                if name.count(':YM:Z:') > 0:
+                    tag, dtype, data = name.split(':')[-3:]
+                    name = ':'.join(name.split(':')[:-3])
+                    yield Fastq(name=name, seq=seq, strand=strand, qual=qual, conv=data)
+                else:
+                    yield Fastq(name=name, seq=seq, strand=strand, qual=qual)
 
     def fileno(self):
         return self.file.fileno()
@@ -338,17 +345,11 @@ class Reader(object):
     def __iter__(self):
         return self
 
-    def subsample(self, n, k):
-        """ Draws n number of reads from self, then returns the kth read.
-        Supply a random k for random sampling. """
-        z = None
-        for i, x in zip(range(n), self):
-            if i == k:
-                z = x
-        if z:
-            return z
-        else:
-            return None
+    def subsample(self, n):
+        """ Draws every nth read from self. Returns Sam. """
+        for i, line in enumerate(self.file):
+            if i % n == 0:
+                yield Sam(tuple(line.rstrip().split('\t')))
 
     def __enter__(self):
         return self

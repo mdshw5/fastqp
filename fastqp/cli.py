@@ -87,20 +87,23 @@ def run(args):
 
     stats = Stats()
     percent_complete = 10
-    reads = itertools.islice(infile, None, None, n)
+    reads = infile.subsample(n)
 
     for read in reads:
         if ext in ['.sam', '.bam']:
             if read.reverse:
-                conv = read.conv[::-1]
+                if args.mbias:
+                    conv = read.conv[::-1]
                 seq = read.seq[::-1]
                 qual = read.qual[::-1]
             else:
-                conv = read.conv
+                if args.mbias:
+                    conv = read.conv
                 seq = read.seq
                 qual = read.qual
         else:
-            conv = read.conv
+            if args.mbias:
+                conv = read.conv
             seq = read.seq
             qual = read.qual
         if args.mbias:
@@ -141,7 +144,7 @@ def run(args):
     if not args.output:
         sys.stdout.write("{pos}\t{dep}\t{qual}\t{base}\n".format(pos='Pos',
                                                                      dep='Depth',
-                                                                     base='\t'.join(bases),
+                                                                     base='\t'.join(stats.nuc[1].keys()),
                                                                      qual='\t'.join(map(str,quantile_values))))
 
         for i, position in enumerate(positions):
@@ -157,7 +160,7 @@ def run(args):
         with open(args.output + '_stats.txt', 'w') as out:
             out.write("{pos}\t{dep}\t{qual}\t{base}\n".format(pos='Pos',
                                                                          dep='Depth',
-                                                                         base='\t'.join(bases),
+                                                                         base='\t'.join(stats.nuc[1].keys()),
                                                                          qual='\t'.join(map(str,quantile_values))))
 
             for i, position in enumerate(positions):
