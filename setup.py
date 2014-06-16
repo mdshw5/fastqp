@@ -4,7 +4,7 @@ from setuptools import setup
 setup(
         name = 'fastqp',
         provides = 'fastqp',
-        version = "0.1.1",
+        version = "0.1.2",
         author = 'Matthew Shirley',
         author_email = 'mdshw5@gmail.com',
         url = 'http://mattshirley.com',
