@@ -91,6 +91,10 @@ def run(args):
 
     for read in reads:
         if ext in ['.sam', '.bam']:
+            if args.aligned and not read.mapped:
+                continue
+            if args.unaligned and read.mapped:
+                continue
             if read.reverse:
                 if args.mbias:
                     conv = read.conv[::-1]
@@ -201,6 +205,9 @@ def main():
     parser.add_argument('-n', '--nreads', type=int, default=2000000, help='number of reads sample from input (default: %(default)s)')
     parser.add_argument('-k', '--kmer', type=int, default=5, choices=range(2, 11), help='length of kmer for over-repesented kmer counts (default: %(default)s)')
     parser.add_argument('-o', '--output', type=str, help="base name for output files (default: plot)")
+    align_group = parser.add_mutually_exclusive_group()
+    align_group.add_argument('--aligned', action="store_true", default=False, help="only aligned reads (default: %(default)s)")
+    align_group.add_argument('--unaligned', action="store_true", default=False, help="only unaligned reads (default: %(default)s)")
     parser.add_argument('--nofigures', action="store_true", default=False, help="don't produce figures (default: %(default)s)")
     parser.add_argument('--nokmer', action="store_true", default=False, help="do not count kmers (default: %(default)s)")
     parser.add_argument('--mbias', action="store_true", default=False, help="make mbias plot for GEMINI reads (default: %(default)s)")
