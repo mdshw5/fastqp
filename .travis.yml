@@ -12,7 +12,7 @@ deploy:
   provider: pypi
   user: mdshw5
   password:
-    secure: WaAW6Vk1yjC851PKaeiJGNyZ6wZ2baqlixUSvRDXoT673yFrlp32IMHofmP/TwVxnLMfQxhAb3r7dYYDYnNw4n3vPInJ+Yy35RG1WQ2XUOpOEZ8n2fWczxKfkJjQ5ob03DCSFPeL5h+FYfyHRAfPb9K8OtEawKRvCfaUXE0teko=
+    secure: U8F49kkgxAbFURUYEeWh0ibMdi62Alb+gqpNRnDi6Asin0N+gqZAOkkrIphPZkYLoXHlx9inF4a0B+Dht0VKgP74ag6NzbFUCslDzpCobL6tqXimwjoFY3nDLQo7Nc2QSRE6Bezo1Bvx8XXhuvT2ev91FOKE9MHeD2YIHife02E=
   on:
     tags: true
     repo: mdshw5/fastqp
