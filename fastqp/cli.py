@@ -6,8 +6,10 @@ import argparse
 import itertools
 import math
 import time
-from fastqp import *
-
+from fastqp import FastqReader, Reader, padbases, percentile, qualplot, \
+    qualdist, qualmap, nucplot, depthplot, gcplot, gcdist, mbiasplot, \
+    window, mean, cpg_map, bam_read_count, gc
+from collections import defaultdict
 
 def run(args):
     """ read FASTQ or SAM and tabulate basic metrics """
@@ -85,7 +87,12 @@ def run(args):
     else:
         infile = FastqReader(args.input)
 
-    stats = Stats()
+    cycle_depth = defaultdict(int)
+    cycle_nuc = defaultdict(lambda: defaultdict(int))
+    cycle_qual = defaultdict(lambda: defaultdict(int))
+    cycle_gc = defaultdict(int)
+    cycle_kmers = defaultdict(lambda: defaultdict(int))
+    cycle_conv = defaultdict(lambda: defaultdict(int))
     percent_complete = 10
     reads = infile.subsample(n)
 
@@ -93,16 +100,20 @@ def run(args):
         if ext in ['.sam', '.bam']:
             if args.aligned and not read.mapped:
                 continue
-            if args.unaligned and read.mapped:
+            elif args.unaligned and read.mapped:
                 continue
             if read.reverse:
                 if args.mbias:
                     conv = read.conv[::-1]
+                else:
+                    conv = read.seq[::-1]
                 seq = read.seq[::-1]
                 qual = read.qual[::-1]
             else:
                 if args.mbias:
                     conv = read.conv
+                else:
+                    conv = read.seq
                 seq = read.seq
                 qual = read.qual
         else:
@@ -110,13 +121,19 @@ def run(args):
                 conv = read.conv
             seq = read.seq
             qual = read.qual
-        if args.mbias:
-            stats.evaluate(seq, qual, conv)
-        else:
-            stats.evaluate(seq, qual)
+
+        cycle_gc[gc(seq)] += 1
+        cpgs = cpg_map(seq)
+        for i, (s, q, c, p) in enumerate(zip(seq, qual, conv, cpgs)):
+            cycle_depth[i+1] += 1
+            cycle_nuc[i+1][s] += 1
+            cycle_qual[i+1][q] += 1
+            if p != 'N':
+                cycle_conv[i+1][c] += 1
 
         if not args.nokmer:
-            stats.kmercount(seq, k=args.kmer)
+            for i, kmer in enumerate(window(seq, n=3)):
+                cycle_kmers[i][kmer] += 1
 
         if not args.quiet and ext != '.gz':
             if (act_nlines / est_nlines) * 100 >= percent_complete:
@@ -128,67 +145,48 @@ def run(args):
                 percent_complete += 10
         act_nlines += n
 
-    positions = [k for k in sorted(stats.depth.keys())]
-    depths = [stats.depth[k] for k in sorted(stats.depth.keys())]
+    positions = [k for k in sorted(cycle_depth.keys())]
+    depths = [cycle_depth[k] for k in sorted(cycle_depth.keys())]
 
-    basecalls = [stats.nuc[k].keys() for k in sorted(stats.nuc.keys())]
+    basecalls = [cycle_nuc[k].keys() for k in sorted(cycle_nuc.keys())]
     bases = set(list(itertools.chain.from_iterable(basecalls)))
-    map(padbases(bases), stats.nuc.values())
-    nbasecalls = [ '\t'.join([str(v) for v in stats.nuc[k].values()]) for k in sorted(stats.nuc.keys())]
+    nbasecalls = [ '\t'.join([str(cycle_nuc[p].get(k, 0)) for k in bases]) for p in sorted(cycle_nuc.keys())]
+    map(padbases(bases), cycle_nuc.values())
 
     quantile_values = [0.05,0.25,0.5,0.75,0.95]
     quantiles = []
     ## replace ASCII quality with integer
-    for k,v in sorted(stats.qual.items()):
-        for qual in tuple(v.keys()): ## py3 keys are iterator, so build a tuple to avoid recursion
-            v[ord(str(qual)) - 33] = v.pop(qual)
+    for k,v in sorted(cycle_qual.items()):
+        for q in tuple(v.keys()): ## py3 keys are iterator, so build a tuple to avoid recursion
+            v[ord(str(q)) - 33] = v.pop(q)
         line = [percentile(v, p) for p in quantile_values]
         quantiles.append(line)
 
-    if not args.output:
-        sys.stdout.write("{pos}\t{dep}\t{qual}\t{base}\n".format(pos='Pos',
-                                                                     dep='Depth',
-                                                                     base='\t'.join(stats.nuc[1].keys()),
-                                                                     qual='\t'.join(map(str,quantile_values))))
+    out = open(args.output + '_counts.txt', 'w')
+    out.write("{pos}\t{dep}\t{qual}\t{base}\n".format(pos='Pos',
+                                                                 dep='Depth',
+                                                                 base='\t'.join(bases),
+                                                                 qual='\t'.join(map(str, quantile_values))))
 
-        for i, position in enumerate(positions):
-            sys.stdout.write("{pos}\t{dep:.1E}\t{qual}\t{base}\n".format(pos=position,
-                                                        dep=depths[i],
-                                                        base=nbasecalls[i],
-                                                        qual='\t'.join(map(str, quantiles[i]))))
-        sys.stdout.write('kmer\tcount\n')
-        for key, value in stats.kmers.most_common(10):
-            sys.stdout.write(key + '\t' + str(value) + '\n')
+    for i, position in enumerate(positions):
+        out.write("{pos}\t{dep:.1E}\t{qual}\t{base}\n".format(pos=position,
+                                                    dep=depths[i],
+                                                    base=nbasecalls[i],
+                                                    qual='\t'.join(map(str, quantiles[i]))))
 
-    elif args.output:
-        with open(args.output + '_stats.txt', 'w') as out:
-            out.write("{pos}\t{dep}\t{qual}\t{base}\n".format(pos='Pos',
-                                                                         dep='Depth',
-                                                                         base='\t'.join(stats.nuc[1].keys()),
-                                                                         qual='\t'.join(map(str,quantile_values))))
-
-            for i, position in enumerate(positions):
-                out.write("{pos}\t{dep:n}\t{qual}\t{base}\n".format(pos=position,
-                                                            dep=depths[i],
-                                                            base=nbasecalls[i],
-                                                            qual='\t'.join(map(str, quantiles[i]))))
-
-            out.write('kmer\tcount\n')
-            for key, value in stats.kmers.most_common(10):
-                out.write(key + '\t' + str(value) + '\n')
+    out.close()
 
     if not args.nofigures:
         fig_kw = {'figsize':(8,6)}
-        basename = args.output if args.output else 'plot'
-        qualplot(positions, quantiles, basename, fig_kw)
-        qualdist(stats.qual.values(), basename, fig_kw)
-        qualmap(stats.qual, basename, fig_kw)
-        depthplot(positions, depths, basename, fig_kw)
-        gcplot(positions, stats.nuc.values(), basename, fig_kw)
-        gcdist(stats.gc, basename, fig_kw)
-        nucplot(positions, bases, stats.nuc, basename, fig_kw)
+        qualplot(positions, quantiles, args.output, fig_kw)
+        qualdist(cycle_qual.values(), args.output, fig_kw)
+        qualmap(cycle_qual, args.output, fig_kw)
+        depthplot(positions, depths, args.output, fig_kw)
+        gcplot(positions, cycle_nuc.values(), args.output, fig_kw)
+        gcdist(cycle_gc, args.output, fig_kw)
+        nucplot(positions, bases, cycle_nuc, args.output, fig_kw)
         if args.mbias:
-            mbiasplot(positions, stats.conv, basename, fig_kw)
+            mbiasplot(positions, cycle_conv, args.output, fig_kw)
     time_finish = time.time()
     elapsed = time_finish - time_start
     if not args.quiet:
@@ -204,7 +202,7 @@ def main():
     parser.add_argument('-s', '--binsize', type=int, help='number of reads to bin for sampling (default: auto)')
     parser.add_argument('-n', '--nreads', type=int, default=2000000, help='number of reads sample from input (default: %(default)s)')
     parser.add_argument('-k', '--kmer', type=int, default=5, choices=range(2, 11), help='length of kmer for over-repesented kmer counts (default: %(default)s)')
-    parser.add_argument('-o', '--output', type=str, help="base name for output files (default: plot)")
+    parser.add_argument('-o', '--output', type=str, default='plot', help="base name for output files (default: plot)")
     align_group = parser.add_mutually_exclusive_group()
     align_group.add_argument('--aligned', action="store_true", default=False, help="only aligned reads (default: %(default)s)")
     align_group.add_argument('--unaligned', action="store_true", default=False, help="only unaligned reads (default: %(default)s)")
