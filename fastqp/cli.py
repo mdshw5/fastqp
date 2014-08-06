@@ -6,9 +6,10 @@ import argparse
 import itertools
 import math
 import time
-from fastqp import FastqReader, Reader, padbases, percentile, qualplot, \
-    qualdist, qualmap, nucplot, depthplot, gcplot, gcdist, mbiasplot, \
+from fastqp import FastqReader, Reader, padbases, percentile, \
     window, mean, cpg_map, bam_read_count, gc
+from fastqp.plots import qualplot, qualdist, qualmap, nucplot, \
+    depthplot, gcplot, gcdist, mbiasplot, kmerplot, convplot
 from collections import defaultdict
 
 def run(args):
@@ -21,7 +22,9 @@ def run(args):
     sample_binsizes = list()
     act_nlines = int()
     name, ext = os.path.splitext(args.input.name)
-
+    if (args.leftlimit > 0) and (args.rightlimit > 0):
+        if args.rightlimit < args.leftlimit:
+            sys.exit("Left limit must be less than right limit.\n")
     if ext not in ['.fastq', '.sam', '.bam', '.gz']:
         sys.exit("Input file must end in either .sam, .bam, .fastq, or .fastq.gz\n")
     # estimate the number of lines in args.input
@@ -92,7 +95,7 @@ def run(args):
     cycle_qual = defaultdict(lambda: defaultdict(int))
     cycle_gc = defaultdict(int)
     cycle_kmers = defaultdict(lambda: defaultdict(int))
-    cycle_conv = defaultdict(lambda: defaultdict(int))
+    cycle_conv = {'CG': defaultdict(lambda: defaultdict(int)), 'C': defaultdict(lambda: defaultdict(int))}
     percent_complete = 10
     reads = infile.subsample(n)
 
@@ -103,37 +106,63 @@ def run(args):
             elif args.unaligned and read.mapped:
                 continue
             if read.reverse:
-                if args.mbias:
+                if args.gemstone:
                     conv = read.conv[::-1]
                 else:
                     conv = read.seq[::-1]
                 seq = read.seq[::-1]
                 qual = read.qual[::-1]
             else:
-                if args.mbias:
+                if args.gemstone:
                     conv = read.conv
                 else:
                     conv = read.seq
                 seq = read.seq
                 qual = read.qual
         else:
-            if args.mbias:
+            if args.gemstone:
                 conv = read.conv
+            else:
+                conv = read.seq
             seq = read.seq
             qual = read.qual
 
+        # Set up limits
+        if (args.leftlimit == 1) and (args.rightlimit < 0):
+            pass
+        elif (args.leftlimit >= 1) and (args.rightlimit > 0):
+            try:
+                seq = seq[args.leftlimit - 1:args.rightlimit]
+                qual = qual[args.leftlimit - 1:args.rightlimit]
+                conv = conv[args.leftlimit - 1:args.rightlimit]
+            except IndexError:
+                act_nlines += n
+                continue
+        elif (args.leftlimit > 1) and (args.rightlimit < 0):
+            try:
+                seq = seq[args.leftlimit - 1:]
+                qual = qual[args.leftlimit - 1:]
+                conv = conv[args.leftlimit - 1:]
+            except IndexError:
+                act_nlines += n
+                continue
+        if len(seq) == 0:
+            act_nlines += n
+            continue
         cycle_gc[gc(seq)] += 1
         cpgs = cpg_map(seq)
         for i, (s, q, c, p) in enumerate(zip(seq, qual, conv, cpgs)):
-            cycle_depth[i+1] += 1
-            cycle_nuc[i+1][s] += 1
-            cycle_qual[i+1][q] += 1
+            cycle_depth[args.leftlimit+i] += 1
+            cycle_nuc[args.leftlimit+i][s] += 1
+            cycle_qual[args.leftlimit+i][q] += 1
             if p != 'N':
-                cycle_conv[i+1][c] += 1
+                cycle_conv['CG'][args.leftlimit+i][c] += 1
+            else:
+                cycle_conv['C'][args.leftlimit+i][c] += 1
 
         if not args.nokmer:
-            for i, kmer in enumerate(window(seq, n=3)):
-                cycle_kmers[i][kmer] += 1
+            for i, kmer in enumerate(window(seq, n=args.kmer)):
+                cycle_kmers[args.leftlimit+i][kmer] += 1
 
         if not args.quiet and ext != '.gz':
             if (act_nlines / est_nlines) * 100 >= percent_complete:
@@ -182,11 +211,13 @@ def run(args):
         qualdist(cycle_qual.values(), args.output, fig_kw)
         qualmap(cycle_qual, args.output, fig_kw)
         depthplot(positions, depths, args.output, fig_kw)
-        gcplot(positions, cycle_nuc.values(), args.output, fig_kw)
+        gcplot(positions, cycle_nuc, args.output, fig_kw)
         gcdist(cycle_gc, args.output, fig_kw)
         nucplot(positions, bases, cycle_nuc, args.output, fig_kw)
-        if args.mbias:
-            mbiasplot(positions, cycle_conv, args.output, fig_kw)
+        kmerplot(positions, cycle_kmers, args.output, fig_kw)
+        if args.gemstone:
+            mbiasplot(positions, cycle_conv['CG'], args.output, fig_kw)
+            convplot(positions, cycle_conv['C'], args.output, fig_kw)
     time_finish = time.time()
     elapsed = time_finish - time_start
     if not args.quiet:
@@ -202,13 +233,15 @@ def main():
     parser.add_argument('-s', '--binsize', type=int, help='number of reads to bin for sampling (default: auto)')
     parser.add_argument('-n', '--nreads', type=int, default=2000000, help='number of reads sample from input (default: %(default)s)')
     parser.add_argument('-k', '--kmer', type=int, default=5, choices=range(2, 11), help='length of kmer for over-repesented kmer counts (default: %(default)s)')
-    parser.add_argument('-o', '--output', type=str, default='plot', help="base name for output files (default: plot)")
+    parser.add_argument('-o', '--output', type=str, default='plot', help="base name for output files (default: %(default)s)")
+    parser.add_argument('-ll', '--leftlimit', type=int, default=1, help="leftmost cycle limit (default: %(default)s)")
+    parser.add_argument('-rl', '--rightlimit', type=int, default=-1, help="rightmost cycle limit (-1 for none) (default: %(default)s)")
     align_group = parser.add_mutually_exclusive_group()
     align_group.add_argument('--aligned', action="store_true", default=False, help="only aligned reads (default: %(default)s)")
     align_group.add_argument('--unaligned', action="store_true", default=False, help="only unaligned reads (default: %(default)s)")
     parser.add_argument('--nofigures', action="store_true", default=False, help="don't produce figures (default: %(default)s)")
     parser.add_argument('--nokmer', action="store_true", default=False, help="do not count kmers (default: %(default)s)")
-    parser.add_argument('--mbias', action="store_true", default=False, help="make mbias plot for GEMINI reads (default: %(default)s)")
+    parser.add_argument('--gemstone', action="store_true", default=False, help="reads have convolution string (default: %(default)s)")
 
     args = parser.parse_args()
     run(args)
