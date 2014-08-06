@@ -146,7 +146,7 @@ def gcplot(positions, counts, filename, fig_kw):
     cycle_gc = [sum([counts[i]['C'], counts[i]['G']]) / sum([counts[i]['C'],
                                                               counts[i]['G'],
                                                               counts[i]['A'],
-                                                              counts[i]['T']]) for i in positions]
+                                                              counts[i]['T']]) * 100 for i in positions]
     axes.plot(positions, cycle_gc, color=(0.1,0.6,0.8))
     x1,x2,y1,y2 = axes.axis()
     axes.axis((x1,x2,0,100))
@@ -165,8 +165,9 @@ def gcdist(counts, filename, fig_kw):
     sigma = math.sqrt(variance)
     x = np.linspace(0,100,100)
     fig, axes = plt.subplots(nrows=1, **fig_kw)
-    axes.plot(tuple(counts.keys()), tuple(counts.values()), color='black')
-    axes.fill_between(tuple(counts.keys()), tuple(counts.values()), color=(0.1,0.6,0.8))
+    x_vals, y_vals = zip(*sorted(counts.items(), key=lambda x: x[0]))
+    axes.plot(x_vals, y_vals, color='black')
+    axes.fill_between(x_vals, y_vals, color=(0.1,0.6,0.8))
     x1,x2,y1,y2 = axes.axis()
     axes.axis((x1,x2,0,y2))
     axes2 = axes.twinx()
