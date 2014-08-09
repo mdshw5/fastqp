@@ -188,11 +188,16 @@ def gcdist(counts, filename, fig_kw):
 
 
 def mbiasplot(positions, conv_dict, filename, fig_kw):
-    methyl_values = [(conv_dict[pos]['G'] + conv_dict[pos]['C']) / (conv_dict[pos]['R'] + conv_dict[pos]['Y'] + conv_dict[pos]['G'] + conv_dict[pos]['C']) for pos in positions]
+    top_strand_c = conv_dict['C']
+    bot_strand_c = conv_dict['G']
+    methyl_values = [(top_strand_c[pos]['C'] + bot_strand_c[pos]['G']) / (top_strand_c[pos]['Y'] + \
+                                                                          bot_strand_c[pos]['R'] + \
+                                                                          top_strand_c[pos]['C'] + \
+                                                                          bot_strand_c[pos]['G'] + 0.1) for pos in positions]
     fig, axes = plt.subplots(nrows=1, **fig_kw)
     axes.plot(positions, methyl_values, color='red')
     x1,x2,y1,y2 = axes.axis()
-    axes.axis((x1,positions[-1],min(methyl_values)-0.1,max(methyl_values)+0.1))
+    axes.axis((x1,x2,0,1))
     axes.yaxis.grid(b=True, which='major', **{'color':'gray', 'linestyle':':'})
     axes.set_axisbelow(True)
     axes.set_title('Methylation bias (M-Bias)')
@@ -206,7 +211,7 @@ def convplot(positions, conv_dict, filename, fig_kw):
     fig, axes = plt.subplots(nrows=1, **fig_kw)
     axes.plot(positions, conv_values, color='gray')
     x1,x2,y1,y2 = axes.axis()
-    axes.axis((x1,positions[-1],min(conv_values)-0.1,max(conv_values)+0.1))
+    axes.axis((x1,x2,min(conv_values)-0.1,max(conv_values)+0.1))
     axes.yaxis.grid(b=True, which='major', **{'color':'gray', 'linestyle':':'})
     axes.set_axisbelow(True)
     axes.set_title('Cytosine conversion rate')

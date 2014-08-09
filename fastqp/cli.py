@@ -7,7 +7,7 @@ import itertools
 import math
 import time
 from fastqp import FastqReader, Reader, padbases, percentile, \
-    window, mean, cpg_map, bam_read_count, gc
+    window, mean, cpg_map, bam_read_count, gc, reverse_methylstring
 from fastqp.plots import qualplot, qualdist, qualmap, nucplot, \
     depthplot, gcplot, gcdist, mbiasplot, kmerplot, convplot
 from collections import defaultdict
@@ -15,7 +15,8 @@ from collections import defaultdict
 def run(args):
     """ read FASTQ or SAM and tabulate basic metrics """
     time_start = time.time()
-    bsize = os.path.getsize(args.input.name)
+    if args.input.name != '<stdin>':
+        bsize = os.path.getsize(args.input.name)
 
     est_counter = int()
     sample_lengths = list()
@@ -25,9 +26,9 @@ def run(args):
     if (args.leftlimit > 0) and (args.rightlimit > 0):
         if args.rightlimit < args.leftlimit:
             sys.exit("Left limit must be less than right limit.\n")
-    if ext not in ['.fastq', '.sam', '.bam', '.gz']:
+    if ext not in ['.fastq', '.sam', '.bam', '.gz'] and args.input.name != '<stdin>':
         sys.exit("Input file must end in either .sam, .bam, .fastq, or .fastq.gz\n")
-    # estimate the number of lines in args.input
+    # estimate the number of lines in args.input if we can
     if ext in ['.fastq']:
         with FastqReader(open(args.input.name)) as fh:
             for read in fh:
@@ -71,8 +72,15 @@ def run(args):
             n = 1
         if not args.quiet:
             sys.stderr.write("Gzipped file detected, bin size (-s) set to {binsize:n}.\n".format(binsize=n))
+    elif name == '<stdin>':
+        if args.binsize:
+            n = args.binsize
+        else:
+            n = 1
+        if not args.quiet:
+            sys.stderr.write("Reading from <stdin>, bin size (-s) set to {binsize:n}.\n".format(binsize=n))
 
-    if ext != '.gz':
+    if ext != '.gz' and args.input.name != '<stdin>':
         # set up factor for sampling bin size
         if args.binsize:
             n = args.binsize
@@ -95,7 +103,9 @@ def run(args):
     cycle_qual = defaultdict(lambda: defaultdict(int))
     cycle_gc = defaultdict(int)
     cycle_kmers = defaultdict(lambda: defaultdict(int))
-    cycle_conv = {'CG': defaultdict(lambda: defaultdict(int)), 'C': defaultdict(lambda: defaultdict(int))}
+    cycle_conv = {'C': defaultdict(lambda: defaultdict(int)),
+                  'G': defaultdict(lambda: defaultdict(int)),
+                  'N': defaultdict(lambda: defaultdict(int))}
     percent_complete = 10
     reads = infile.subsample(n)
 
@@ -107,7 +117,7 @@ def run(args):
                 continue
             if read.reverse:
                 if args.gemstone:
-                    conv = read.conv[::-1]
+                    conv = reverse_methylstring(read.conv)
                 else:
                     conv = read.seq[::-1]
                 seq = read.seq[::-1]
@@ -155,16 +165,18 @@ def run(args):
             cycle_depth[args.leftlimit+i] += 1
             cycle_nuc[args.leftlimit+i][s] += 1
             cycle_qual[args.leftlimit+i][q] += 1
-            if p != 'N':
-                cycle_conv['CG'][args.leftlimit+i][c] += 1
-            else:
+            if p == 'C':
                 cycle_conv['C'][args.leftlimit+i][c] += 1
+            elif p == 'G':
+                cycle_conv['G'][args.leftlimit+i][c] += 1
+            else:
+                cycle_conv['N'][args.leftlimit+i][c] += 1
 
         if not args.nokmer:
             for i, kmer in enumerate(window(seq, n=args.kmer)):
                 cycle_kmers[args.leftlimit+i][kmer] += 1
 
-        if not args.quiet and ext != '.gz':
+        if not args.quiet and ext != '.gz' and args.input.name != '<stdin>':
             if (act_nlines / est_nlines) * 100 >= percent_complete:
                 sys.stderr.write("Approximately {0:n}% complete at "
                                  "read {1:,} in {2}\n".format(percent_complete,
@@ -216,8 +228,8 @@ def run(args):
         nucplot(positions, bases, cycle_nuc, args.output, fig_kw)
         kmerplot(positions, cycle_kmers, args.output, fig_kw)
         if args.gemstone:
-            mbiasplot(positions, cycle_conv['CG'], args.output, fig_kw)
-            convplot(positions, cycle_conv['C'], args.output, fig_kw)
+            mbiasplot(positions, cycle_conv, args.output, fig_kw)
+            convplot(positions, cycle_conv['N'], args.output, fig_kw)
     time_finish = time.time()
     elapsed = time_finish - time_start
     if not args.quiet:
@@ -228,7 +240,7 @@ def run(args):
 
 def main():
     parser = argparse.ArgumentParser(prog='fastqp', description="simple NGS read quality assessment using Python")
-    parser.add_argument('input', type=argparse.FileType('r'), help="input file (one of .sam, .bam, or .fastq(.gz) )")
+    parser.add_argument('input', type=argparse.FileType('r'), help="input file (one of .sam, .bam, or .fastq(.gz) or stdin (-))")
     parser.add_argument('-q', '--quiet', action="store_true", default=False, help="do not print any messages (default: %(default)s)")
     parser.add_argument('-s', '--binsize', type=int, help='number of reads to bin for sampling (default: auto)')
     parser.add_argument('-n', '--nreads', type=int, default=2000000, help='number of reads sample from input (default: %(default)s)')
