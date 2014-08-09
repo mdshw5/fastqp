@@ -14,6 +14,7 @@ Features
 - A useful set of default graphics rivaling comparable QC packages
 - Counts *all* IPUAC ambiguous nucleotide codes (NMWSKRY) if present in sequences
 - Downsamples input files to around 2,000,000 reads (user adjustable)
+- Allows a 5' and 3' (left and right) cycle limit for graphics generation
 
 Requirements
 ------------
@@ -35,7 +36,8 @@ Usage
     simple NGS read quality assessment using Python
 
     positional arguments:
-      input                 input file (one of .sam, .bam, or .fastq(.gz) )
+      input                 input file (one of .sam, .bam, or .fastq(.gz) or stdin
+                            (-))
 
     optional arguments:
       -h, --help            show this help message and exit
@@ -49,9 +51,16 @@ Usage
                             (default: 5)
       -o OUTPUT, --output OUTPUT
                             base name for output files (default: plot)
+      -ll LEFTLIMIT, --leftlimit LEFTLIMIT
+                            leftmost cycle limit (default: 1)
+      -rl RIGHTLIMIT, --rightlimit RIGHTLIMIT
+                            rightmost cycle limit (-1 for none) (default: -1)
+      --aligned             only aligned reads (default: False)
+      --unaligned           only unaligned reads (default: False)
       --nofigures           don't produce figures (default: False)
       --nokmer              do not count kmers (default: False)
-      --mbias               make mbias plot for GEMINI reads (default: False)
+      --gemstone            reads have convolution string (default: False)
+
 
 Examples
 --------
@@ -69,6 +78,12 @@ Examples
 ![quality heatmap](https://raw.github.com/mdshw5/fastqp/master/examples/example_qualmap.png)
 
 ![quality distribution](https://raw.github.com/mdshw5/fastqp/master/examples/example_qualdist.png)
+
+![kmer distribution](https://raw.github.com/mdshw5/fastqp/master/examples/example_kmers.png)
+
+![cytosine conversion](https://raw.github.com/mdshw5/fastqp/master/examples/example_conversion.png)
+
+![CpG methylation bias](https://raw.github.com/mdshw5/fastqp/master/examples/example_mbias.png)
 
 
 Acknowledgements
