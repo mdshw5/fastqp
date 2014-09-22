@@ -257,3 +257,29 @@ def kmerplot(positions, counts, filename, fig_kw):
     for label in legend.get_texts():
         label.set_color('black')
     plt.savefig(filename + '_kmers.png')
+
+def mismatchplot(positions, counts, refname, filename, fig_kw):
+    cmap = mpl.cm.get_cmap(name='Set1')
+    colors = [cmap(i) for i in np.linspace(0, 1, 12)]
+    mpl.rc('axes', color_cycle=colors)
+    fig, axes = plt.subplots(nrows=1, subplot_kw={'axis_bgcolor':'white'}, **fig_kw)
+    ref_alt = []
+    for ref in ['C', 'G', 'A', 'T']:
+        for alt in set(['C', 'G', 'A', 'T']) - set([ref]):
+            axes.plot(positions, [counts[ref][pos][alt] / sum(counts[ref][pos].values()) for pos in positions])
+            ref_alt.append('>'.join([ref, alt]))
+    # Shink current axis by 20%
+    box = axes.get_position()
+    axes.set_position([box.x0, box.y0, box.width, box.height])
+    axes.yaxis.grid(b=True, which='major', **{'color':'gray', 'linestyle':':'})
+    axes.set_axisbelow(True)
+    axes.set_title('Reference mismatches to {0} by cycle'.format(refname))
+    axes.set_xlabel('Cycle')
+    axes.set_ylabel('Fraction of mismatches')
+    legend = axes.legend(ref_alt, ncol=int(len(ref_alt)/3),
+                bbox_to_anchor=(0.5,0.25), loc='best', prop={'size':8})
+    frame = legend.get_frame()
+    frame.set_facecolor('white')
+    for label in legend.get_texts():
+        label.set_color('black')
+    plt.savefig(filename + '_mismatch.png')

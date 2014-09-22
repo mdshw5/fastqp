@@ -9,8 +9,9 @@ import time
 from fastqp import FastqReader, Reader, padbases, percentile, \
     window, mean, cpg_map, bam_read_count, gc, reverse_methylstring
 from fastqp.plots import qualplot, qualdist, qualmap, nucplot, \
-    depthplot, gcplot, gcdist, mbiasplot, kmerplot, convplot
+    depthplot, gcplot, gcdist, mbiasplot, kmerplot, convplot, mismatchplot
 from collections import defaultdict
+from pyfaidx import Fasta
 
 def run(args):
     """ read FASTQ or SAM and tabulate basic metrics """
@@ -98,6 +99,9 @@ def run(args):
     else:
         infile = FastqReader(args.input)
 
+    if args.reference and ext in ['.sam', '.bam']:
+        fasta = Fasta(args.reference.name, as_raw=True)
+
     cycle_depth = defaultdict(int)
     cycle_nuc = defaultdict(lambda: defaultdict(int))
     cycle_qual = defaultdict(lambda: defaultdict(int))
@@ -106,6 +110,10 @@ def run(args):
     cycle_conv = {'C': defaultdict(lambda: defaultdict(int)),
                   'G': defaultdict(lambda: defaultdict(int)),
                   'N': defaultdict(lambda: defaultdict(int))}
+    cycle_mismatch = {'C': defaultdict(lambda: defaultdict(int)),
+                      'G': defaultdict(lambda: defaultdict(int)),
+                      'A': defaultdict(lambda: defaultdict(int)),
+                      'T': defaultdict(lambda: defaultdict(int))}
     percent_complete = 10
     reads = infile.subsample(n)
 
@@ -161,6 +169,7 @@ def run(args):
             continue
         cycle_gc[gc(seq)] += 1
         cpgs = cpg_map(seq)
+
         for i, (s, q, c, p) in enumerate(zip(seq, qual, conv, cpgs)):
             cycle_depth[args.leftlimit+i] += 1
             cycle_nuc[args.leftlimit+i][s] += 1
@@ -175,6 +184,13 @@ def run(args):
         if not args.nokmer:
             for i, kmer in enumerate(window(seq, n=args.kmer)):
                 cycle_kmers[args.leftlimit+i][kmer] += 1
+
+        if args.reference and read.mapped:
+            adj_pos = read.pos + args.leftlimit - 1
+            ref = fasta[read.rname][adj_pos-1:adj_pos+len(read)-1]
+            for i, (s, r) in enumerate(zip(seq, ref)):
+                if s != r:
+                    cycle_mismatch[r][args.leftlimit+i][s] += 1
 
         if not args.quiet and ext != '.gz' and args.input.name != '<stdin>':
             if (act_nlines / est_nlines) * 100 >= percent_complete:
@@ -230,6 +246,8 @@ def run(args):
         if args.gemstone:
             mbiasplot(positions, cycle_conv, args.output, fig_kw)
             convplot(positions, cycle_conv['N'], args.output, fig_kw)
+        if args.reference:
+            mismatchplot(positions, cycle_mismatch, args.reference.name, args.output, fig_kw)
     time_finish = time.time()
     elapsed = time_finish - time_start
     if not args.quiet:
@@ -241,6 +259,7 @@ def run(args):
 def main():
     parser = argparse.ArgumentParser(prog='fastqp', description="simple NGS read quality assessment using Python")
     parser.add_argument('input', type=argparse.FileType('r'), help="input file (one of .sam, .bam, or .fastq(.gz) or stdin (-))")
+    parser.add_argument('-x', '--reference', type=argparse.FileType('r'), help="reference fasta if .sam/.bam (optional, used for mismatch plot)")
     parser.add_argument('-q', '--quiet', action="store_true", default=False, help="do not print any messages (default: %(default)s)")
     parser.add_argument('-s', '--binsize', type=int, help='number of reads to bin for sampling (default: auto)')
     parser.add_argument('-n', '--nreads', type=int, default=2000000, help='number of reads sample from input (default: %(default)s)')
