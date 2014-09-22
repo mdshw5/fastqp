@@ -190,7 +190,10 @@ def run(args):
             ref = fasta[read.rname][adj_pos-1:adj_pos+len(read)-1]
             for i, (s, r) in enumerate(zip(seq, ref)):
                 if s != r:
-                    cycle_mismatch[r][args.leftlimit+i][s] += 1
+                    try:
+                        cycle_mismatch[r][args.leftlimit+i][s] += 1
+                    except KeyError:
+                        pass
 
         if not args.quiet and ext != '.gz' and args.input.name != '<stdin>':
             if (act_nlines / est_nlines) * 100 >= percent_complete:
