@@ -277,7 +277,7 @@ def mismatchplot(positions, depths, counts, refname, filename, fig_kw):
     axes.set_xlabel('Cycle')
     axes.set_ylabel('Fraction of mismatches')
     legend = axes.legend(ref_alt, ncol=int(len(ref_alt)/3),
-                bbox_to_anchor=(0.5,0.25), loc='lower center', prop={'size':8})
+                bbox_to_anchor=(0.5,0.25), loc='best', prop={'size':8})
     frame = legend.get_frame()
     frame.set_facecolor('white')
     for label in legend.get_texts():
