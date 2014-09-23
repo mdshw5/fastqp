@@ -258,7 +258,7 @@ def kmerplot(positions, counts, filename, fig_kw):
         label.set_color('black')
     plt.savefig(filename + '_kmers.png')
 
-def mismatchplot(positions, counts, refname, filename, fig_kw):
+def mismatchplot(positions, depths, counts, refname, filename, fig_kw):
     cmap = mpl.cm.get_cmap(name='Set1')
     colors = [cmap(i) for i in np.linspace(0, 1, 12)]
     mpl.rc('axes', color_cycle=colors)
@@ -266,7 +266,7 @@ def mismatchplot(positions, counts, refname, filename, fig_kw):
     ref_alt = []
     for ref in ['C', 'G', 'A', 'T']:
         for alt in set(['C', 'G', 'A', 'T']) - set([ref]):
-            axes.plot(positions, [counts[ref][pos][alt] / sum(counts[ref][pos].values()) for pos in positions])
+            axes.plot(positions, [counts[ref][pos][alt] / d for pos, d in zip(positions, depths)])
             ref_alt.append('>'.join([ref, alt]))
     # Shink current axis by 20%
     box = axes.get_position()

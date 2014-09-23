@@ -250,7 +250,7 @@ def run(args):
             mbiasplot(positions, cycle_conv, args.output, fig_kw)
             convplot(positions, cycle_conv['N'], args.output, fig_kw)
         if args.reference:
-            mismatchplot(positions, cycle_mismatch, args.reference.name, args.output, fig_kw)
+            mismatchplot(positions, depths, cycle_mismatch, args.reference.name, args.output, fig_kw)
     time_finish = time.time()
     elapsed = time_finish - time_start
     if not args.quiet:
