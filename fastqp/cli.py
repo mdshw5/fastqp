@@ -27,7 +27,7 @@ def run(args):
     if (args.leftlimit > 0) and (args.rightlimit > 0):
         if args.rightlimit < args.leftlimit:
             sys.exit("Left limit must be less than right limit.\n")
-    if ext not in ['.fastq', '.sam', '.bam', '.gz'] and args.input.name != '<stdin>':
+    if ext not in ['.fq','.fastq', '.sam', '.bam', '.gz'] and args.input.name != '<stdin>':
         sys.exit("Input file must end in either .sam, .bam, .fastq, or .fastq.gz\n")
     # estimate the number of lines in args.input if we can
     if ext in ['.fastq']:
