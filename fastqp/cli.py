@@ -27,10 +27,10 @@ def run(args):
     if (args.leftlimit > 0) and (args.rightlimit > 0):
         if args.rightlimit < args.leftlimit:
             sys.exit("Left limit must be less than right limit.\n")
-    if ext not in ['.fastq', '.sam', '.bam', '.gz'] and args.input.name != '<stdin>':
+    if ext not in ['.fq','.fastq', '.sam', '.bam', '.gz'] and args.input.name != '<stdin>':
         sys.exit("Input file must end in either .sam, .bam, .fastq, or .fastq.gz\n")
     # estimate the number of lines in args.input if we can
-    if ext in ['.fastq']:
+    if ext in ['.fastq','.fq']:
         with FastqReader(open(args.input.name)) as fh:
             for read in fh:
                 sample_lengths.append(len(read))
@@ -261,7 +261,7 @@ def run(args):
 
 def main():
     parser = argparse.ArgumentParser(prog='fastqp', description="simple NGS read quality assessment using Python")
-    parser.add_argument('input', type=argparse.FileType('r'), help="input file (one of .sam, .bam, or .fastq(.gz) or stdin (-))")
+    parser.add_argument('input', type=argparse.FileType('r'), help="input file (one of .sam, .bam, .fq, or .fastq(.gz) or stdin (-))")
     parser.add_argument('-x', '--reference', type=argparse.FileType('r'), help="reference fasta if .sam/.bam (optional, used for mismatch plot)")
     parser.add_argument('-q', '--quiet', action="store_true", default=False, help="do not print any messages (default: %(default)s)")
     parser.add_argument('-s', '--binsize', type=int, help='number of reads to bin for sampling (default: auto)')
