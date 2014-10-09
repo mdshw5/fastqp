@@ -61,6 +61,13 @@ Usage
       --nokmer              do not count kmers (default: False)
       --gemstone            reads have convolution string (default: False)
 
+Changes
+-------
+
+New in 0.1.5:
+
+- Added `.fq` as acceptable file extension. (Thanks @danielecook)
+- Added cycle-specific kmer plots
 
 Examples
 --------
