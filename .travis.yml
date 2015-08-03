@@ -12,6 +12,6 @@ deploy:
     secure: U8F49kkgxAbFURUYEeWh0ibMdi62Alb+gqpNRnDi6Asin0N+gqZAOkkrIphPZkYLoXHlx9inF4a0B+Dht0VKgP74ag6NzbFUCslDzpCobL6tqXimwjoFY3nDLQo7Nc2QSRE6Bezo1Bvx8XXhuvT2ev91FOKE9MHeD2YIHife02E=
   on:
     all_branches: true
-    python: 2.6
+    python: 2.7
     tags: true
     repo: mdshw5/fastqp
