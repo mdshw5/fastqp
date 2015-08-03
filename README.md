@@ -88,10 +88,6 @@ Examples
 
 ![kmer distribution](https://raw.github.com/mdshw5/fastqp/master/examples/example_kmers.png)
 
-![cytosine conversion](https://raw.github.com/mdshw5/fastqp/master/examples/example_conversion.png)
-
-![CpG methylation bias](https://raw.github.com/mdshw5/fastqp/master/examples/example_mbias.png)
-
 
 Acknowledgements
 ----------------
