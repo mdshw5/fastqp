@@ -9,8 +9,7 @@ import math
 import time
 import shlex
 from fastqp import FastqReader, padbases, percentile, mean, bam_read_count, gc, window
-from fastqp.plots import qualplot, qualdist, qualmap, nucplot, \
-    depthplot, gcplot, gcdist, kmerplot, mismatchplot
+from fastqp.plots import qualplot, qualdist, qualmap, nucplot, depthplot, gcplot, gcdist, kmerplot, mismatchplot
 from collections import defaultdict
 from simplesam import Reader, Sam
 from subprocess import Popen, PIPE
@@ -177,13 +176,17 @@ def run(args):
             cycle_kmers[args.leftlimit+i][kmer] += 1
 
         if isinstance(read, Sam) and read.mapped:
-            ref = read.parse_md()
-            for i, (s, r) in enumerate(zip(seq, ref)):
-                if s != r:
-                    try:
-                        cycle_mismatch[r][args.leftlimit+i][s] += 1
-                    except KeyError:
-                        pass
+            try:
+                ref = read.parse_md()
+                for i, (s, r) in enumerate(zip(seq, ref)):
+                    if s != r:
+                        try:
+                            cycle_mismatch[r][args.leftlimit+i][s] += 1
+                        except KeyError:
+                            pass
+            except KeyError:
+                pass
+
 
         if est_nlines is not None:
             if (act_nlines / est_nlines) * 100 >= percent_complete:
