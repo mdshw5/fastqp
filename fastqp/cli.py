@@ -1,4 +1,5 @@
 #!/usr/bin/python
+# pylint: disable=bad-builtin
 
 import os
 import sys
@@ -6,12 +7,14 @@ import argparse
 import itertools
 import math
 import time
-from fastqp import FastqReader, Reader, padbases, percentile, \
-    window, mean, cpg_map, bam_read_count, gc, reverse_methylstring
+import shlex
+from fastqp import FastqReader, padbases, percentile, mean, bam_read_count, gc, window
 from fastqp.plots import qualplot, qualdist, qualmap, nucplot, \
-    depthplot, gcplot, gcdist, mbiasplot, kmerplot, convplot, mismatchplot
+    depthplot, gcplot, gcdist, kmerplot, mismatchplot
 from collections import defaultdict
-from pyfaidx import Fasta
+from simplesam import Reader, Sam
+from subprocess import Popen, PIPE
+
 
 def run(args):
     """ read FASTQ or SAM and tabulate basic metrics """
@@ -70,9 +73,13 @@ def run(args):
         if args.binsize:
             n = args.binsize
         else:
-            n = 1
+            sys.stderr.write("Gzipped file detected. Reading file to determine bin size (-s).\n")
+            p1 = Popen(shlex.split('gzip -dc %s' % args.input.name), stdout=PIPE)
+            p2 = Popen(shlex.split('wc -l'), stdin=p1.stdout, stdout=PIPE)
+            est_nlines, _ = p2.communicate()
+            est_nlines = int(est_nlines) // 4
         if not args.quiet:
-            sys.stderr.write("Gzipped file detected, bin size (-s) set to {binsize:n}.\n".format(binsize=n))
+            sys.stderr.write("{est:,} reads in input file.\n".format(est=est_nlines))
     elif name == '<stdin>':
         if args.binsize:
             n = args.binsize
@@ -80,8 +87,8 @@ def run(args):
             n = 1
         if not args.quiet:
             sys.stderr.write("Reading from <stdin>, bin size (-s) set to {binsize:n}.\n".format(binsize=n))
-
-    if ext != '.gz' and args.input.name != '<stdin>':
+        est_nlines = None
+    if est_nlines is not None:
         # set up factor for sampling bin size
         if args.binsize:
             n = args.binsize
@@ -99,49 +106,37 @@ def run(args):
     else:
         infile = FastqReader(args.input)
 
-    if args.reference and ext in ['.sam', '.bam']:
-        fasta = Fasta(args.reference.name, as_raw=True)
-
     cycle_depth = defaultdict(int)
     cycle_nuc = defaultdict(lambda: defaultdict(int))
     cycle_qual = defaultdict(lambda: defaultdict(int))
     cycle_gc = defaultdict(int)
     cycle_kmers = defaultdict(lambda: defaultdict(int))
-    cycle_conv = {'C': defaultdict(lambda: defaultdict(int)),
-                  'G': defaultdict(lambda: defaultdict(int)),
-                  'N': defaultdict(lambda: defaultdict(int))}
     cycle_mismatch = {'C': defaultdict(lambda: defaultdict(int)),
                       'G': defaultdict(lambda: defaultdict(int)),
                       'A': defaultdict(lambda: defaultdict(int)),
                       'T': defaultdict(lambda: defaultdict(int))}
+    if args.count_duplicates:
+        bloom_filter = ScalableBloomFilter(mode=ScalableBloomFilter.SMALL_SET_GROWTH)
+    duplicates = 0
     percent_complete = 10
     reads = infile.subsample(n)
 
+    if args.count_duplicates:
+        from pybloom import ScalableBloomFilter
+
     for read in reads:
-        if ext in ['.sam', '.bam']:
-            if args.aligned and not read.mapped:
+        if isinstance(read, Sam):
+            if args.aligned_only and not read.mapped:
                 continue
-            elif args.unaligned and read.mapped:
+            elif args.unaligned_only and read.mapped:
                 continue
             if read.reverse:
-                if args.gemstone:
-                    conv = reverse_methylstring(read.conv)
-                else:
-                    conv = read.seq[::-1]
                 seq = read.seq[::-1]
                 qual = read.qual[::-1]
             else:
-                if args.gemstone:
-                    conv = read.conv
-                else:
-                    conv = read.seq
                 seq = read.seq
                 qual = read.qual
         else:
-            if args.gemstone:
-                conv = read.conv
-            else:
-                conv = read.seq
             seq = read.seq
             qual = read.qual
 
@@ -152,7 +147,6 @@ def run(args):
             try:
                 seq = seq[args.leftlimit - 1:args.rightlimit]
                 qual = qual[args.leftlimit - 1:args.rightlimit]
-                conv = conv[args.leftlimit - 1:args.rightlimit]
             except IndexError:
                 act_nlines += n
                 continue
@@ -160,7 +154,6 @@ def run(args):
             try:
                 seq = seq[args.leftlimit - 1:]
                 qual = qual[args.leftlimit - 1:]
-                conv = conv[args.leftlimit - 1:]
             except IndexError:
                 act_nlines += n
                 continue
@@ -168,26 +161,23 @@ def run(args):
             act_nlines += n
             continue
         cycle_gc[gc(seq)] += 1
-        cpgs = cpg_map(seq)
 
-        for i, (s, q, c, p) in enumerate(zip(seq, qual, conv, cpgs)):
-            cycle_depth[args.leftlimit+i] += 1
-            cycle_nuc[args.leftlimit+i][s] += 1
-            cycle_qual[args.leftlimit+i][q] += 1
-            if p == 'C':
-                cycle_conv['C'][args.leftlimit+i][c] += 1
-            elif p == 'G':
-                cycle_conv['G'][args.leftlimit+i][c] += 1
+        if args.count_duplicates:
+            if seq in bloom_filter:
+                duplicates += 1
             else:
-                cycle_conv['N'][args.leftlimit+i][c] += 1
+                bloom_filter.add(seq)
 
-        if not args.nokmer:
-            for i, kmer in enumerate(window(seq, n=args.kmer)):
-                cycle_kmers[args.leftlimit+i][kmer] += 1
+        for i, (s, q) in enumerate(zip(seq, qual)):
+            cycle_depth[args.leftlimit + i] += 1
+            cycle_nuc[args.leftlimit + i][s] += 1
+            cycle_qual[args.leftlimit + i][q] += 1
 
-        if args.reference and read.mapped:
-            adj_pos = read.pos + args.leftlimit - 1
-            ref = fasta[read.rname][adj_pos-1:adj_pos+len(read)-1]
+        for i, kmer in enumerate(window(seq, n=args.kmer)):
+            cycle_kmers[args.leftlimit+i][kmer] += 1
+
+        if isinstance(read, Sam) and read.mapped:
+            ref = read.parse_md()
             for i, (s, r) in enumerate(zip(seq, ref)):
                 if s != r:
                     try:
@@ -195,7 +185,7 @@ def run(args):
                     except KeyError:
                         pass
 
-        if not args.quiet and ext != '.gz' and args.input.name != '<stdin>':
+        if est_nlines is not None:
             if (act_nlines / est_nlines) * 100 >= percent_complete:
                 sys.stderr.write("Approximately {0:n}% complete at "
                                  "read {1:,} in {2}\n".format(percent_complete,
@@ -210,33 +200,56 @@ def run(args):
 
     basecalls = [cycle_nuc[k].keys() for k in sorted(cycle_nuc.keys())]
     bases = set(list(itertools.chain.from_iterable(basecalls)))
-    nbasecalls = [ '\t'.join([str(cycle_nuc[p].get(k, 0)) for k in bases]) for p in sorted(cycle_nuc.keys())]
+    #nbasecalls = [ '\t'.join([str(cycle_nuc[p].get(k, 0)) for k in bases]) for p in sorted(cycle_nuc.keys())]
     map(padbases(bases), cycle_nuc.values())
 
     quantile_values = [0.05,0.25,0.5,0.75,0.95]
     quantiles = []
     ## replace ASCII quality with integer
-    for k,v in sorted(cycle_qual.items()):
+    for _, v in sorted(cycle_qual.items()):
         for q in tuple(v.keys()): ## py3 keys are iterator, so build a tuple to avoid recursion
             v[ord(str(q)) - 33] = v.pop(q)
         line = [percentile(v, p) for p in quantile_values]
         quantiles.append(line)
 
-    out = open(args.output + '_counts.txt', 'w')
-    out.write("{pos}\t{dep}\t{qual}\t{base}\n".format(pos='Pos',
-                                                                 dep='Depth',
-                                                                 base='\t'.join(bases),
-                                                                 qual='\t'.join(map(str, quantile_values))))
+    sys.stdout.write("{pos}\t{factor}\t{value}\n".format(pos='level',
+                                                                 factor='factor',
+                                                                 value='value'))
 
     for i, position in enumerate(positions):
-        out.write("{pos}\t{dep:.1E}\t{qual}\t{base}\n".format(pos=position,
-                                                    dep=depths[i],
-                                                    base=nbasecalls[i],
-                                                    qual='\t'.join(map(str, quantiles[i]))))
+        sys.stdout.write("{pos}\t{factor}\t{value}\n".format(pos=position,
+                                                    factor='nreads',
+                                                    value=depths[i]))
+    for i, position in enumerate(positions):
+        sys.stdout.write("{pos}\t{factor}\t{value}\n".format(pos=position,
+                                                    factor='quantile0.05',
+                                                    value=quantiles[i][0]))
+        sys.stdout.write("{pos}\t{factor}\t{value}\n".format(pos=position,
+                                                    factor='quantile0.25',
+                                                    value=quantiles[i][1]))
+        sys.stdout.write("{pos}\t{factor}\t{value}\n".format(pos=position,
+                                                    factor='quantile0.50',
+                                                    value=quantiles[i][2]))
+        sys.stdout.write("{pos}\t{factor}\t{value}\n".format(pos=position,
+                                                    factor='quantile0.75',
+                                                    value=quantiles[i][3]))
+        sys.stdout.write("{pos}\t{factor}\t{value}\n".format(pos=position,
+                                                    factor='quantile0.95',
+                                                    value=quantiles[i][4]))
+    for base in bases:
+        for position in positions:
+            sys.stdout.write("{pos}\t{factor}\t{value}\n".format(pos=position,
+                                                        factor=base,
+                                                        value=cycle_nuc[position][base]))
+    for i in range(101):
+        sys.stdout.write("{pos}\t{factor}\t{value}\n".format(pos=i,
+                                                    factor='read_gc',
+                                                    value=cycle_gc[i]))
 
-    out.close()
+    if args.count_duplicates:
+        sys.stdout.write("0\tpct_duplicate\t{0:.2%}\n".format(duplicates/act_nlines))
 
-    if not args.nofigures:
+    if not args.no_figures:
         fig_kw = {'figsize':(8,6)}
         qualplot(positions, quantiles, args.output, fig_kw)
         qualdist(cycle_qual.values(), args.output, fig_kw)
@@ -246,11 +259,8 @@ def run(args):
         gcdist(cycle_gc, args.output, fig_kw)
         nucplot(positions, bases, cycle_nuc, args.output, fig_kw)
         kmerplot(positions, cycle_kmers, args.output, fig_kw)
-        if args.gemstone:
-            mbiasplot(positions, cycle_conv, args.output, fig_kw)
-            convplot(positions, cycle_conv['N'], args.output, fig_kw)
-        if args.reference:
-            mismatchplot(positions, depths, cycle_mismatch, args.reference.name, args.output, fig_kw)
+        if isinstance(infile, Reader):
+            mismatchplot(positions, depths, cycle_mismatch, args.output, fig_kw)
     time_finish = time.time()
     elapsed = time_finish - time_start
     if not args.quiet:
@@ -258,11 +268,13 @@ def run(args):
                                                                                                                   sec=time.strftime('%H:%M:%S',
                                                                                                                       time.gmtime(elapsed))
                                                                                                                       ))
+    # calculate obs/expected
+
+
 
 def main():
     parser = argparse.ArgumentParser(prog='fastqp', description="simple NGS read quality assessment using Python")
     parser.add_argument('input', type=argparse.FileType('r'), help="input file (one of .sam, .bam, .fq, or .fastq(.gz) or stdin (-))")
-    parser.add_argument('-x', '--reference', type=argparse.FileType('r'), help="reference fasta if .sam/.bam (optional, used for mismatch plot)")
     parser.add_argument('-q', '--quiet', action="store_true", default=False, help="do not print any messages (default: %(default)s)")
     parser.add_argument('-s', '--binsize', type=int, help='number of reads to bin for sampling (default: auto)')
     parser.add_argument('-n', '--nreads', type=int, default=2000000, help='number of reads sample from input (default: %(default)s)')
@@ -271,11 +283,10 @@ def main():
     parser.add_argument('-ll', '--leftlimit', type=int, default=1, help="leftmost cycle limit (default: %(default)s)")
     parser.add_argument('-rl', '--rightlimit', type=int, default=-1, help="rightmost cycle limit (-1 for none) (default: %(default)s)")
     align_group = parser.add_mutually_exclusive_group()
-    align_group.add_argument('--aligned', action="store_true", default=False, help="only aligned reads (default: %(default)s)")
-    align_group.add_argument('--unaligned', action="store_true", default=False, help="only unaligned reads (default: %(default)s)")
-    parser.add_argument('--nofigures', action="store_true", default=False, help="don't produce figures (default: %(default)s)")
-    parser.add_argument('--nokmer', action="store_true", default=False, help="do not count kmers (default: %(default)s)")
-    parser.add_argument('--gemstone', action="store_true", default=False, help="reads have convolution string (default: %(default)s)")
+    align_group.add_argument('--aligned-only', action="store_true", default=False, help="only aligned reads (default: %(default)s)")
+    align_group.add_argument('--unaligned-only', action="store_true", default=False, help="only unaligned reads (default: %(default)s)")
+    parser.add_argument('--no-figures', action="store_true", default=False, help="don't produce figures (default: %(default)s)")
+    parser.add_argument('-d', '--count-duplicates', action="store_true", default=False, help="calculate sequence duplication rate (default: %(default)s)")
 
     args = parser.parse_args()
     run(args)
