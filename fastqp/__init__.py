@@ -567,23 +567,6 @@ def cpg_map(seq):
         cpgs[start+1] = 'G'
     return ''.join(cpgs[1:-1])
 
-
-def reverse_methylstring(mstring):
-    """ When reads are mapped in reverse complement, we need to reverse complement
-     the methylation string.
-     >>> reverse_methylstring('AACGWTTYATMSAYTTXGCRK')
-     'kYGCxAARTsmATRAAwCGTT'
-    """
-    assert isinstance(mstring, string_types)
-    if PY3:
-        table = str.maketrans('ACTGNRYSWKMswkmXx',
-                              'TGACNYRswkmSWKMxX')
-    elif PY2:
-        table = string.maketrans('ACTGNRYSWKMswkmXx',
-                              'TGACNYRswkmSWKMxX')
-    return str(mstring).translate(table)[::-1]
-
-
 if __name__ == "__main__":
     import doctest
     doctest.testmod()
