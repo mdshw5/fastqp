@@ -1,3 +1,4 @@
+# pylint disable: W0622,C0103,R0913,R0902
 """
 Classes and functions for quality assessment of FASTQ and SAM format NGS reads
 """
@@ -13,7 +14,7 @@ from itertools import groupby, islice
 from collections import defaultdict
 try:
     from collections import Counter
-except:
+except ImportError:
     from fastqp.backports import Counter
 from subprocess import Popen, PIPE
 from io import TextIOWrapper
@@ -112,7 +113,7 @@ class Fastq(object):
             self.name = ''.join(['@', self.name])
         if self.conv:
             return '\n'.join(['{0}:YM:Z:{1}'.format(self.name, self.conv),
-                             self.seq, self.strand, self.qual]) + '\n'
+                              self.seq, self.strand, self.qual]) + '\n'
         else:
             return '\n'.join([self.name, self.seq, self.strand, self.qual]) + '\n'
 
@@ -459,6 +460,8 @@ def decode_tag(tag):
     ('XS', 'i', 5)
     """
     values = tag.split(':')
+    if len(values) != 3:
+        values = (values[0], values[1], ':'.join(values[2:]))
     if values[1] == 'i':
         values[2] = int(values[2])
     elif values[1] == 'f':
