@@ -9,10 +9,14 @@ import math
 import time
 import shlex
 from fastqp import FastqReader, padbases, percentile, mean, bam_read_count, gc, window
-from fastqp.plots import qualplot, qualdist, qualmap, nucplot, depthplot, gcplot, gcdist, kmerplot, mismatchplot
+from fastqp.plots import qualplot, qualdist, qualmap, nucplot, depthplot, gcplot, gcdist, kmerplot, mismatchplot, adaptermerplot
+from fastqp.adapters import all_adapter_sequences
 from collections import defaultdict
 from simplesam import Reader, Sam
 from subprocess import Popen, PIPE
+from scipy import stats
+from operator import mul
+from six.moves import reduce
 
 
 def run(args):
@@ -31,6 +35,12 @@ def run(args):
             sys.exit("Left limit must be less than right limit.\n")
     if ext not in ['.fq','.fastq', '.sam', '.bam', '.gz'] and args.input.name != '<stdin>':
         sys.exit("Input file must end in either .sam, .bam, .fastq, or .fastq.gz\n")
+
+    if args.name:
+        sample_name = args.name
+    else:
+        sample_name = args.input.name
+        
     # estimate the number of lines in args.input if we can
     if ext in ['.fastq','.fq']:
         with FastqReader(open(args.input.name)) as fh:
@@ -71,14 +81,17 @@ def run(args):
     elif ext == '.gz':
         if args.binsize:
             n = args.binsize
+            est_nlines = None
+            if not args.quiet:
+                sys.stderr.write("Reading from gzipped file, bin size (-s) set to {binsize:n}.\n".format(binsize=n))
         else:
             sys.stderr.write("Gzipped file detected. Reading file to determine bin size (-s).\n")
             p1 = Popen(shlex.split('gzip -dc %s' % args.input.name), stdout=PIPE)
             p2 = Popen(shlex.split('wc -l'), stdin=p1.stdout, stdout=PIPE)
             est_nlines, _ = p2.communicate()
             est_nlines = int(est_nlines) // 4
-        if not args.quiet:
-            sys.stderr.write("{est:,} reads in input file.\n".format(est=est_nlines))
+            if not args.quiet:
+                sys.stderr.write("{est:,} reads in input file.\n".format(est=est_nlines))
     elif name == '<stdin>':
         if args.binsize:
             n = args.binsize
@@ -105,7 +118,7 @@ def run(args):
     else:
         infile = FastqReader(args.input)
 
-    cycle_depth = defaultdict(int)
+    read_len = defaultdict(int)
     cycle_nuc = defaultdict(lambda: defaultdict(int))
     cycle_qual = defaultdict(lambda: defaultdict(int))
     cycle_gc = defaultdict(int)
@@ -168,9 +181,9 @@ def run(args):
                 bloom_filter.add(seq)
 
         for i, (s, q) in enumerate(zip(seq, qual)):
-            cycle_depth[args.leftlimit + i] += 1
             cycle_nuc[args.leftlimit + i][s] += 1
             cycle_qual[args.leftlimit + i][q] += 1
+        read_len[len(qual)] += 1
 
         for i, kmer in enumerate(window(seq, n=args.kmer)):
             cycle_kmers[args.leftlimit+i][kmer] += 1
@@ -198,8 +211,8 @@ def run(args):
                 percent_complete += 10
         act_nlines += n
 
-    positions = [k for k in sorted(cycle_depth.keys())]
-    depths = [cycle_depth[k] for k in sorted(cycle_depth.keys())]
+    positions = [k for k in sorted(cycle_qual.keys())]
+    depths = [read_len[k] for k in sorted(read_len.keys())]
 
     basecalls = [cycle_nuc[k].keys() for k in sorted(cycle_nuc.keys())]
     bases = set(list(itertools.chain.from_iterable(basecalls)))
@@ -215,64 +228,103 @@ def run(args):
         line = [percentile(v, p) for p in quantile_values]
         quantiles.append(line)
 
-    sys.stdout.write("{pos}\t{factor}\t{value}\n".format(pos='level',
-                                                                 factor='factor',
-                                                                 value='value'))
+    # build kmer set of known adapter sequences
+    adapter_kmers = set()
+    for adapter in all_adapter_sequences:
+        for kmer in window(adapter, n=args.kmer):
+            adapter_kmers.add(kmer)
+
+    # test for nonuniform kmer profiles and calculate obs/exp
+    observed_expected = dict()
+    all_kmers = [cycle_kmers[k].keys() for k in sorted(cycle_kmers.keys())]
+    kmers = set(list(itertools.chain.from_iterable(all_kmers)))
+    bad_kmers = []
+    sequenced_bases = sum((l * n for l, n in read_len.items()))
+    priors = map(float, args.base_probs.split(','))
+    for kmer in kmers:
+        kmer_counts = [(i, cycle_kmers[i][kmer]) for i in cycle_kmers.keys()]
+        expected = reduce(mul, (p ** kmer.count(b) for b, p in zip(('A', 'T', 'C', 'G', 'N'), priors)), 1) * sequenced_bases
+        observed_expected[kmer] = sum((n for _, n in kmer_counts)) / expected
+        slope, _, _, p_value, _ = stats.linregress(*zip(*kmer_counts))
+        if abs(slope) > 2 and p_value < 0.05:
+            bad_kmers.append((kmer, slope, p_value))
+    bad_kmers = sorted(bad_kmers, key=lambda x: x[2])[:10]
+    
+
+    # see http://vita.had.co.nz/papers/tidy-data.pdf
+    sys.stdout.write("{row}\t{column}\t{value}\n".format(row='row',
+                                                         column='column',
+                                                         value='value'))
+ 
+    sys.stdout.write("{row}\t{column}\t{value}\n".format(row=sample_name,
+                                                         column='reads',
+                                                         value=act_nlines))
+   
+    for cycle, count in read_len.items():
+        sys.stdout.write("{row}\t{column}\t{value:n}\n".format(row=sample_name,
+                                                               column='cycle_' + str(cycle),
+                                                               value=count))
 
     for i, position in enumerate(positions):
-        sys.stdout.write("{pos}\t{factor}\t{value}\n".format(pos=position,
-                                                    factor='nreads',
-                                                    value=depths[i]))
-    for i, position in enumerate(positions):
-        sys.stdout.write("{pos}\t{factor}\t{value}\n".format(pos=position,
-                                                    factor='quantile0.05',
-                                                    value=quantiles[i][0]))
-        sys.stdout.write("{pos}\t{factor}\t{value}\n".format(pos=position,
-                                                    factor='quantile0.25',
-                                                    value=quantiles[i][1]))
-        sys.stdout.write("{pos}\t{factor}\t{value}\n".format(pos=position,
-                                                    factor='quantile0.50',
-                                                    value=quantiles[i][2]))
-        sys.stdout.write("{pos}\t{factor}\t{value}\n".format(pos=position,
-                                                    factor='quantile0.75',
-                                                    value=quantiles[i][3]))
-        sys.stdout.write("{pos}\t{factor}\t{value}\n".format(pos=position,
-                                                    factor='quantile0.95',
-                                                    value=quantiles[i][4]))
+        sys.stdout.write("{row}\t{column}\t{value:n}\n".format(row=sample_name,
+                                                               column='q05',
+                                                               value=quantiles[i][0]))
+        sys.stdout.write("{row}\t{column}\t{value:n}\n".format(row=sample_name,
+                                                               column='q25',
+                                                               value=quantiles[i][1]))
+        sys.stdout.write("{row}\t{column}\t{value:n}\n".format(row=sample_name,
+                                                               column='q50',
+                                                               value=quantiles[i][2]))
+        sys.stdout.write("{row}\t{column}\t{value:n}\n".format(row=sample_name,
+                                                               column='q75',
+                                                               value=quantiles[i][3]))
+        sys.stdout.write("{row}\t{column}\t{value:n}\n".format(row=sample_name,
+                                                               column='q95',
+                                                               value=quantiles[i][4]))
     for base in bases:
         for position in positions:
-            sys.stdout.write("{pos}\t{factor}\t{value}\n".format(pos=position,
-                                                        factor=base,
-                                                        value=cycle_nuc[position][base]))
+            sys.stdout.write("{row}\t{column}\t{value:n}\n".format(row=sample_name,
+                                                                   column=base + str(position),
+                                                                   value=cycle_nuc[position][base]))
     for i in range(101):
-        sys.stdout.write("{pos}\t{factor}\t{value}\n".format(pos=i,
-                                                    factor='read_gc',
-                                                    value=cycle_gc[i]))
+        sys.stdout.write("{row}\t{column}\t{value:n}\n".format(row=sample_name,
+                                                               column='read_gc_' + str(i),
+                                                               value=cycle_gc[i]))    
+
+    for kmer, obs_exp in sorted(observed_expected.items(), key=lambda x: x[1]):
+        sys.stdout.write("{row}\t{column}\t{value:n}\n".format(row=sample_name,
+                                                               column=kmer,
+                                                               value=obs_exp))    
 
     if args.count_duplicates:
         sys.stdout.write("0\tpct_duplicate\t{0:.2%}\n".format(duplicates/act_nlines))
 
-    if not args.no_figures:
-        fig_kw = {'figsize':(8,6)}
-        qualplot(positions, quantiles, args.output, fig_kw)
-        qualdist(cycle_qual.values(), args.output, fig_kw)
-        qualmap(cycle_qual, args.output, fig_kw)
-        depthplot(positions, depths, args.output, fig_kw)
-        gcplot(positions, cycle_nuc, args.output, fig_kw)
-        gcdist(cycle_gc, args.output, fig_kw)
-        nucplot(positions, bases, cycle_nuc, args.output, fig_kw)
-        kmerplot(positions, cycle_kmers, args.output, fig_kw)
+    from zipfile import ZipFile
+    with ZipFile(args.output + '.zip', mode='w') as zip_archive:
+        fig_kw = {'figsize':(8, 6)}
+        qualplot(positions, quantiles, zip_archive, fig_kw)
+        median_qual = qualdist(cycle_qual.values(), zip_archive, fig_kw)
+        qualmap(cycle_qual, zip_archive, fig_kw)
+        depthplot(read_len, zip_archive, fig_kw)
+        gcplot(positions, cycle_nuc, zip_archive, fig_kw)
+        gcdist(cycle_gc, zip_archive, fig_kw)
+        nucplot(positions, bases, cycle_nuc, zip_archive, fig_kw)
+        kmerplot(positions, cycle_kmers, zip_archive, [fields[0] for fields in bad_kmers], fig_kw)
+        adaptermerplot(positions, cycle_kmers, adapter_kmers, zip_archive, fig_kw)
         if isinstance(infile, Reader):
-            mismatchplot(positions, depths, cycle_mismatch, args.output, fig_kw)
+            mismatchplot(positions, depths, cycle_mismatch, zip_archive, fig_kw)
     time_finish = time.time()
     elapsed = time_finish - time_start
     if not args.quiet:
-        sys.stderr.write("There were approximately {counts:,} reads in the file. Analysis finished in {sec}.\n".format(counts=act_nlines,
-                                                                                                                  sec=time.strftime('%H:%M:%S',
-                                                                                                                      time.gmtime(elapsed))
-                                                                                                                      ))
-    # calculate obs/expected
-
+        sys.stderr.write("There were {counts:,} reads in the file. Analysis finished in {sec}.\n".format(counts=act_nlines,
+                                                                                                                       sec=time.strftime('%H:%M:%S',
+                                                                                                                                         time.gmtime(elapsed))
+        ))
+        if len(bad_kmers) > 0:
+            for kmer in bad_kmers:
+                sys.stderr.write("KmerWarning: kmer %s has a non-uniform profile (slope = %s, p = %s).\n" % (kmer))
+        if median_qual < args.median_qual:
+            sys.stderr.write("QualityWarning: median base quality score is %s.\n" % median_qual)
 
 
 def main():
@@ -280,11 +332,14 @@ def main():
     parser.add_argument('input', type=argparse.FileType('r'), help="input file (one of .sam, .bam, .fq, or .fastq(.gz) or stdin (-))")
     parser.add_argument('-q', '--quiet', action="store_true", default=False, help="do not print any messages (default: %(default)s)")
     parser.add_argument('-s', '--binsize', type=int, help='number of reads to bin for sampling (default: auto)')
+    parser.add_argument('-a', '--name', type=str, help='sample name identifier for text and graphics output (default: input file name)')
     parser.add_argument('-n', '--nreads', type=int, default=2000000, help='number of reads sample from input (default: %(default)s)')
-    parser.add_argument('-k', '--kmer', type=int, default=5, choices=range(2, 11), help='length of kmer for over-repesented kmer counts (default: %(default)s)')
-    parser.add_argument('-o', '--output', type=str, default='plot', help="base name for output files (default: %(default)s)")
+    parser.add_argument('-p', '--base-probs', type=str, default='0.24,0.24,0.24,0.24,0.04', help='probabilites for observing A,T,C,G,N in reads (default: %(default)s)')    
+    parser.add_argument('-k', '--kmer', type=int, default=5, choices=range(2, 8), help='length of kmer for over-repesented kmer counts (default: %(default)s)')
+    parser.add_argument('-o', '--output', type=str, default='fastqp_figures', help="base name for output files (default: %(default)s)")
     parser.add_argument('-ll', '--leftlimit', type=int, default=1, help="leftmost cycle limit (default: %(default)s)")
     parser.add_argument('-rl', '--rightlimit', type=int, default=-1, help="rightmost cycle limit (-1 for none) (default: %(default)s)")
+    parser.add_argument('-mq', '--median-qual', type=int, default=30, help="median quality threshold for failing QC (default: %(default)s)")
     align_group = parser.add_mutually_exclusive_group()
     align_group.add_argument('--aligned-only', action="store_true", default=False, help="only aligned reads (default: %(default)s)")
     align_group.add_argument('--unaligned-only', action="store_true", default=False, help="only unaligned reads (default: %(default)s)")
