@@ -1,3 +1,5 @@
+from __future__ import division
+
 import sys
 import numpy as np
 import math
@@ -510,6 +512,9 @@ def adaptermerplot(positions, counts, adapters, filename, fig_kw):
     kmer_len = len(tuple(kmers)[0])
     kmer_sums = Counter(dict(zip(kmers, [sum([counts[pos].get(kmer, 0) for pos in positions]) for kmer in kmers])))
     top_kmers = [x[0] for x in kmer_sums.most_common(9)]
+    cmap = mpl.cm.get_cmap(name='Set1')
+    colors = [cmap(i) for i in np.linspace(0, 1, len(top_kmers))]
+    mpl.rc('axes', color_cycle=colors)    
     fig, axes = plt.subplots(nrows=1, subplot_kw={'axis_bgcolor':'white'}, **fig_kw)
     kmer_percent = defaultdict(lambda: defaultdict(int))
     for pos, count in tuple(counts.items()):

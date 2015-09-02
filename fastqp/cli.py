@@ -240,10 +240,11 @@ def run(args):
     kmers = set(list(itertools.chain.from_iterable(all_kmers)))
     bad_kmers = []
     sequenced_bases = sum((l * n for l, n in read_len.items()))
-    priors = map(float, args.base_probs.split(','))
+    priors = tuple(map(float, args.base_probs.split(',')))
     for kmer in kmers:
-        kmer_counts = [(i, cycle_kmers[i][kmer]) for i in cycle_kmers.keys()]
-        expected = reduce(mul, (p ** kmer.count(b) for b, p in zip(('A', 'T', 'C', 'G', 'N'), priors)), 1) * sequenced_bases
+        kmer_counts = [(i, cycle_kmers[i][kmer]) for i in sorted(cycle_kmers.keys())]
+        expected_fraction = reduce(mul, (p ** kmer.count(b) for b, p in zip(('A', 'T', 'C', 'G', 'N'), priors)), 1)
+        expected = expected_fraction * sequenced_bases
         observed_expected[kmer] = sum((n for _, n in kmer_counts)) / expected
         slope, _, _, p_value, _ = stats.linregress(*zip(*kmer_counts))
         if abs(slope) > 2 and p_value < 0.05:
@@ -334,7 +335,7 @@ def main():
     parser.add_argument('-s', '--binsize', type=int, help='number of reads to bin for sampling (default: auto)')
     parser.add_argument('-a', '--name', type=str, help='sample name identifier for text and graphics output (default: input file name)')
     parser.add_argument('-n', '--nreads', type=int, default=2000000, help='number of reads sample from input (default: %(default)s)')
-    parser.add_argument('-p', '--base-probs', type=str, default='0.24,0.24,0.24,0.24,0.04', help='probabilites for observing A,T,C,G,N in reads (default: %(default)s)')    
+    parser.add_argument('-p', '--base-probs', type=str, default='0.25,0.25,0.25,0.25,0.1', help='probabilites for observing A,T,C,G,N in reads (default: %(default)s)')    
     parser.add_argument('-k', '--kmer', type=int, default=5, choices=range(2, 8), help='length of kmer for over-repesented kmer counts (default: %(default)s)')
     parser.add_argument('-o', '--output', type=str, default='fastqp_figures', help="base name for output files (default: %(default)s)")
     parser.add_argument('-ll', '--leftlimit', type=int, default=1, help="leftmost cycle limit (default: %(default)s)")
