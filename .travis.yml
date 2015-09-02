@@ -1,5 +1,9 @@
 language: python
 sudo: false
+addons:
+  apt:	
+    packages:
+      - python-scipy      
 python:
 - '3.4'
 - '2.7'
