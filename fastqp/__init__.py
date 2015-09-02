@@ -47,7 +47,7 @@ class Gzip(object):
                 try:
                     fh = TextIOWrapper(p.stdout)
                 except AttributeError:
-                    sys.exit(p.stderr.readlines())
+                    sys.exit(p.stderr.read())
         elif 'w' in mode:
             self.fh = open(filename, 'wb', 0)
             p = Popen(['gzip', '-c'], stdin=PIPE, stdout=self.fh)
