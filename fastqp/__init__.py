@@ -40,11 +40,14 @@ class Gzip(object):
     def open(self, filename, mode):
         if 'r' in mode:
             self.fh = open(filename, 'rb', 0)
-            p = Popen(['gzip', '-dc', filename], stdout=PIPE)
+            p = Popen(['gzip', '-dc', filename], stdout=PIPE, stderr=PIPE)
             if 'b' in mode:
                 fh = p.stdout
             else:
-                fh = TextIOWrapper(p.stdout)
+                try:
+                    fh = TextIOWrapper(p.stdout)
+                except AttributeError:
+                    sys.exit(p.stderr.readlines())
         elif 'w' in mode:
             self.fh = open(filename, 'wb', 0)
             p = Popen(['gzip', '-c'], stdin=PIPE, stdout=self.fh)
