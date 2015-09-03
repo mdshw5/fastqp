@@ -313,7 +313,7 @@ def run(args):
         kmerplot(positions, cycle_kmers, zip_archive, [fields[0] for fields in bad_kmers], fig_kw)
         adaptermerplot(positions, cycle_kmers, adapter_kmers, zip_archive, fig_kw)
         if isinstance(infile, Reader):
-            mismatchplot(positions, depths, cycle_mismatch, zip_archive, fig_kw)
+            mismatchplot(positions, cycle_mismatch, zip_archive, fig_kw)
     time_finish = time.time()
     elapsed = time_finish - time_start
     if not args.quiet:
