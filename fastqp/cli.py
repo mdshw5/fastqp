@@ -268,19 +268,19 @@ def run(args):
 
     for i, position in enumerate(positions):
         sys.stdout.write("{row}\t{column}\t{value:n}\n".format(row=sample_name,
-                                                               column='q05',
+                                                               column=str(position) + '_q05',
                                                                value=quantiles[i][0]))
         sys.stdout.write("{row}\t{column}\t{value:n}\n".format(row=sample_name,
-                                                               column='q25',
+                                                               column=str(position) + '_q25',
                                                                value=quantiles[i][1]))
         sys.stdout.write("{row}\t{column}\t{value:n}\n".format(row=sample_name,
-                                                               column='q50',
+                                                               column=str(position) + '_q50',
                                                                value=quantiles[i][2]))
         sys.stdout.write("{row}\t{column}\t{value:n}\n".format(row=sample_name,
-                                                               column='q75',
+                                                               column=str(position) + '_q75',
                                                                value=quantiles[i][3]))
         sys.stdout.write("{row}\t{column}\t{value:n}\n".format(row=sample_name,
-                                                               column='q95',
+                                                               column=str(position) + '_q95',
                                                                value=quantiles[i][4]))
     for base in bases:
         for position in positions:
@@ -313,7 +313,8 @@ def run(args):
         kmerplot(positions, cycle_kmers, zip_archive, [fields[0] for fields in bad_kmers], fig_kw)
         adaptermerplot(positions, cycle_kmers, adapter_kmers, zip_archive, fig_kw)
         if isinstance(infile, Reader):
-            mismatchplot(positions, cycle_mismatch, zip_archive, fig_kw)
+            mismatchplot(positions
+                         , cycle_mismatch, zip_archive, fig_kw)
     time_finish = time.time()
     elapsed = time_finish - time_start
     if not args.quiet:
