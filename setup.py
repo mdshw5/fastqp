@@ -4,7 +4,7 @@ from setuptools import setup
 setup(
         name = 'fastqp',
         provides = 'fastqp',
-        version = "0.1.6",
+        version = "0.1.7",
         author = 'Matthew Shirley',
         author_email = 'mdshw5@gmail.com',
         url = 'http://mattshirley.com',
@@ -20,9 +20,7 @@ setup(
                 "Intended Audience :: Science/Research",
                 "Natural Language :: English",
                 "Operating System :: Unix",
-                "Programming Language :: Python :: 2.6",
                 "Programming Language :: Python :: 2.7",
-                "Programming Language :: Python :: 3.3",
                 "Programming Language :: Python :: 3.4",
                 "Topic :: Scientific/Engineering :: Bio-Informatics"
         ]
