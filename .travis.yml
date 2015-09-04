@@ -4,6 +4,7 @@ addons:
   apt:	
     packages:
       - libatlas-dev
+      - liblapack-dev
 python:
 - '3.4'
 - '2.7'
