@@ -345,7 +345,6 @@ def main():
     align_group = parser.add_mutually_exclusive_group()
     align_group.add_argument('--aligned-only', action="store_true", default=False, help="only aligned reads (default: %(default)s)")
     align_group.add_argument('--unaligned-only', action="store_true", default=False, help="only unaligned reads (default: %(default)s)")
-    parser.add_argument('--no-figures', action="store_true", default=False, help="don't produce figures (default: %(default)s)")
     parser.add_argument('-d', '--count-duplicates', action="store_true", default=False, help="calculate sequence duplication rate (default: %(default)s)")
 
     args = parser.parse_args()

@@ -33,41 +33,46 @@ Note: BAM file support requires [samtools](http://samtools.sourceforge.net)
 Usage
 -----
 
-    simple NGS read quality assessment using Python
+```shell
+usage: fastqp [-h] [-q] [-s BINSIZE] [-a NAME] [-n NREADS] [-p BASE_PROBS] [-k {2,3,4,5,6,7}] [-o OUTPUT]
+              [-ll LEFTLIMIT] [-rl RIGHTLIMIT] [-mq MEDIAN_QUAL] [--aligned-only | --unaligned-only] [-d]
+              input
 
-    positional arguments:
-      input                 input file (one of .sam, .bam, or .fastq(.gz) or stdin
-                            (-))
+simple NGS read quality assessment using Python
 
-    optional arguments:
-      -h, --help            show this help message and exit
-      -q, --quiet           do not print any messages (default: False)
-      -s BINSIZE, --binsize BINSIZE
-                            number of reads to bin for sampling (default: auto)
-      -n NREADS, --nreads NREADS
-                            number of reads sample from input (default: 2000000)
-      -k {2,3,4,5,6,7,8,9,10}, --kmer {2,3,4,5,6,7,8,9,10}
-                            length of kmer for over-repesented kmer counts
-                            (default: 5)
-      -o OUTPUT, --output OUTPUT
-                            base name for output files (default: plot)
-      -ll LEFTLIMIT, --leftlimit LEFTLIMIT
-                            leftmost cycle limit (default: 1)
-      -rl RIGHTLIMIT, --rightlimit RIGHTLIMIT
-                            rightmost cycle limit (-1 for none) (default: -1)
-      --aligned             only aligned reads (default: False)
-      --unaligned           only unaligned reads (default: False)
-      --nofigures           don't produce figures (default: False)
-      --nokmer              do not count kmers (default: False)
-      --gemstone            reads have convolution string (default: False)
+positional arguments:
+  input                 input file (one of .sam, .bam, .fq, or .fastq(.gz) or stdin (-))
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -q, --quiet           do not print any messages (default: False)
+  -s BINSIZE, --binsize BINSIZE
+                        number of reads to bin for sampling (default: auto)
+  -a NAME, --name NAME  sample name identifier for text and graphics output (default: input file name)
+  -n NREADS, --nreads NREADS
+                        number of reads sample from input (default: 2000000)
+  -p BASE_PROBS, --base-probs BASE_PROBS
+                        probabilites for observing A,T,C,G,N in reads (default: 0.25,0.25,0.25,0.25,0.1)
+  -k {2,3,4,5,6,7}, --kmer {2,3,4,5,6,7}
+                        length of kmer for over-repesented kmer counts (default: 5)
+  -o OUTPUT, --output OUTPUT
+                        base name for output files (default: fastqp_figures)
+  -ll LEFTLIMIT, --leftlimit LEFTLIMIT
+                        leftmost cycle limit (default: 1)
+  -rl RIGHTLIMIT, --rightlimit RIGHTLIMIT
+                        rightmost cycle limit (-1 for none) (default: -1)
+  -mq MEDIAN_QUAL, --median-qual MEDIAN_QUAL
+                        median quality threshold for failing QC (default: 30)
+  --aligned-only        only aligned reads (default: False)
+  --unaligned-only      only unaligned reads (default: False)
+  -d, --count-duplicates
+                        calculate sequence duplication rate (default: False)
+```
 
 Changes
 -------
 
-New in 0.1.5:
-
-- Added `.fq` as acceptable file extension. (Thanks @danielecook)
-- Added cycle-specific kmer plots
+See [releases page](https://github.com/mdshw5/fastqp/releases) for details.
 
 Examples
 --------
