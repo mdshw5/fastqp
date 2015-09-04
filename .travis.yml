@@ -3,7 +3,7 @@ sudo: false
 addons:
   apt:	
     packages:
-      - python-scipy      
+      - libatlas-dev
 python:
 - '3.4'
 - '2.7'
