@@ -1,5 +1,5 @@
 """
-Oligonucleotide sequences © 2007-2013 Illumina, Inc. All rights reserved. 
+Oligonucleotide sequences copyright 2007-2013 Illumina, Inc. All rights reserved. 
 Derivative works created by Illumina customers are authorized for use with 
 Illumina instruments and products only. All other uses are strictly prohibited.
 """
