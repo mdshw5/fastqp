@@ -253,10 +253,6 @@ def run(args):
     
 
     # see http://vita.had.co.nz/papers/tidy-data.pdf
-    sys.stdout.write("{row}\t{column}\t{value}\n".format(row='row',
-                                                         column='column',
-                                                         value='value'))
- 
     sys.stdout.write("{row}\t{column}\t{value}\n".format(row=sample_name,
                                                          column='reads',
                                                          value=act_nlines))

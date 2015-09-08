@@ -4,3 +4,4 @@ fastqp.egg-info
 /#*shell*#
 /*shell*
 /.DS_Store
+*.DS_Store
