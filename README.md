@@ -80,7 +80,7 @@ See [releases page](https://github.com/mdshw5/fastqp/releases) for details.
 Examples
 --------
 
-![quality percentiles](https://raw.github.com/mdshw5/fastqp/master/examples/example_quals.png)
+![quality heatmap](https://raw.github.com/mdshw5/fastqp/master/examples/example_qualmap.png)
 
 ![gc plot](https://raw.github.com/mdshw5/fastqp/master/examples/example_gc.png)
 
@@ -90,13 +90,13 @@ Examples
 
 ![nucleotide mismatch plot](https://raw.github.com/mdshw5/fastqp/master/examples/example_mismatch.png)
 
+![kmer distribution](https://raw.github.com/mdshw5/fastqp/master/examples/example_kmers.png)
+
 ![depth plot](https://raw.github.com/mdshw5/fastqp/master/examples/example_depth.png)
 
-![quality heatmap](https://raw.github.com/mdshw5/fastqp/master/examples/example_qualmap.png)
+![quality percentiles](https://raw.github.com/mdshw5/fastqp/master/examples/example_quals.png)
 
 ![quality distribution](https://raw.github.com/mdshw5/fastqp/master/examples/example_qualdist.png)
-
-![kmer distribution](https://raw.github.com/mdshw5/fastqp/master/examples/example_kmers.png)
 
 ![adapter kmer distribution](https://raw.github.com/mdshw5/fastqp/master/examples/example_adapters.png)
 
