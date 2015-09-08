@@ -3,32 +3,35 @@ fastqp
 [![Build Status](https://travis-ci.org/mdshw5/fastqp.svg?)](https://travis-ci.org/mdshw5/fastqp)
 [![PyPI](https://img.shields.io/pypi/v/fastqp.svg?)](https://pypi.python.org/pypi/fastqp)
 
-Simple FASTQ and SAM read quality assessment and plotting using Python.
+Simple FASTQ, SAM and BAM read quality assessment and plotting using Python.
 
 Features
 --------
 
-- Requires only Python with Numpy and Matplotlib libraries
+- Requires only Python with Numpy, Scipy, and Matplotlib libraries
 - Works with (gzipped) FASTQ, SAM, and BAM formatted reads
-- Tabular output statistics so you can create your own graphs
+- Tabular, tidy, output statistics so you can create your own graphs
 - A useful set of default graphics rivaling comparable QC packages
 - Counts *all* IPUAC ambiguous nucleotide codes (NMWSKRY) if present in sequences
 - Downsamples input files to around 2,000,000 reads (user adjustable)
 - Allows a 5' and 3' (left and right) cycle limit for graphics generation
+- Tracks kmers and sequence duplication for the *entire* input file
+- Plot base call reference mismatches for aligned reads
+- Optional sequence duplication calculation using Bloom filters (beta)
 
 Requirements
 ------------
 
-Tested on Python 2.6, 2.7, 3.2, 3.3, 3.4
+Tested on Python 2.7, and 3.4
 
-Tested on Mac OS 10.9 and Linux 2.6.18
+Tested on Mac OS 10.10 and Linux 2.6.18
 
 Installation
 ------------
 
-    pip install fastqp
+    pip install [--user] fastqp
 
-Note: BAM file support requires [samtools](http://samtools.sourceforge.net)
+Note: BAM file support requires [samtools](https://github.com/samtools/samtools)
 
 Usage
 -----
@@ -85,6 +88,8 @@ Examples
 
 ![nucleotide plot](https://raw.github.com/mdshw5/fastqp/master/examples/example_nucs.png)
 
+![nucleotide mismatch plot](https://raw.github.com/mdshw5/fastqp/master/examples/example_mismatch.png)
+
 ![depth plot](https://raw.github.com/mdshw5/fastqp/master/examples/example_depth.png)
 
 ![quality heatmap](https://raw.github.com/mdshw5/fastqp/master/examples/example_qualmap.png)
@@ -93,9 +98,12 @@ Examples
 
 ![kmer distribution](https://raw.github.com/mdshw5/fastqp/master/examples/example_kmers.png)
 
+![adapter kmer distribution](https://raw.github.com/mdshw5/fastqp/master/examples/example_adapters.png)
+
 
 Acknowledgements
 ----------------
-This project is freely licensed by the author, [Matthew Shirley](http://mattshirley.com), and was completed under the mentorship
-and financial support of Drs. [Sarah Wheelan](http://sjwheelan.som.jhmi.edu) and [Vasan Yegnasubramanian](http://yegnalab.onc.jhmi.edu) at
-the Sidney Kimmel Comprehensive Cancer Center in the Department of Oncology.
+This project is freely licensed by the author, [Matthew Shirley](http://mattshirley.com), and
+was completed under the mentorship financial support of Drs. [Sarah Wheelan](http://sjwheelan.som.jhmi.edu)
+and [Vasan Yegnasubramanian](http://yegnalab.onc.jhmi.edu) at the Sidney Kimmel Comprehensive
+Cancer Center in the Department of Oncology.
