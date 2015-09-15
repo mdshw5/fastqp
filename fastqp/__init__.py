@@ -264,10 +264,9 @@ class FastqReader:
     """
     A class to read the name, sequence, strand and qualities from a fastq file
     """
-    def __init__(self, f):
-        name, ext = os.path.splitext(f.name)
+    def __init__(self, f, ext=None):
         if ext == '.gz':
-            self.file = Gzip(''.join([name, ext]), 'r')
+            self.file = Gzip(f.name, 'r')
         else:
             self.file = f
 

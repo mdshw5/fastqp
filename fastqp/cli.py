@@ -118,7 +118,7 @@ def run(args):
     if ext in ['.sam', '.bam']:
         infile = Reader(args.input)
     else:
-        infile = FastqReader(args.input)
+        infile = FastqReader(args.input, ext=ext)
 
     read_len = defaultdict(int)
     cycle_nuc = defaultdict(lambda: defaultdict(int))
