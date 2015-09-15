@@ -33,6 +33,8 @@ def run(args):
     if (args.leftlimit > 0) and (args.rightlimit > 0):
         if args.rightlimit < args.leftlimit:
             sys.exit("Left limit must be less than right limit.\n")
+    if args.type:
+        ext = args.type
     if ext not in ['.fq','.fastq', '.sam', '.bam', '.gz'] and args.input.name != '<stdin>':
         sys.exit("Input file must end in either .sam, .bam, .fastq, or .fastq.gz\n")
 
@@ -335,6 +337,7 @@ def main():
     parser.add_argument('-p', '--base-probs', type=str, default='0.25,0.25,0.25,0.25,0.1', help='probabilites for observing A,T,C,G,N in reads (default: %(default)s)')    
     parser.add_argument('-k', '--kmer', type=int, default=5, choices=range(2, 8), help='length of kmer for over-repesented kmer counts (default: %(default)s)')
     parser.add_argument('-o', '--output', type=str, default='fastqp_figures', help="base name for output files (default: %(default)s)")
+    parser.add_argument('-t', '--type', type=str, default=None, choices=['fastq', 'gz', 'sam', 'bam'], help="file type (default: auto")
     parser.add_argument('-ll', '--leftlimit', type=int, default=1, help="leftmost cycle limit (default: %(default)s)")
     parser.add_argument('-rl', '--rightlimit', type=int, default=-1, help="rightmost cycle limit (-1 for none) (default: %(default)s)")
     parser.add_argument('-mq', '--median-qual', type=int, default=30, help="median quality threshold for failing QC (default: %(default)s)")
