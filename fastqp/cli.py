@@ -129,14 +129,17 @@ def run(args):
                       'G': defaultdict(lambda: defaultdict(int)),
                       'A': defaultdict(lambda: defaultdict(int)),
                       'T': defaultdict(lambda: defaultdict(int))}
+                      
     if args.count_duplicates:
-        bloom_filter = ScalableBloomFilter(mode=ScalableBloomFilter.SMALL_SET_GROWTH)
+        try:
+            from pybloom import ScalableBloomFilter
+            bloom_filter = ScalableBloomFilter(mode=ScalableBloomFilter.SMALL_SET_GROWTH)
+        except ImportError:
+            sys.exit("--count-duplicates option requires 'pybloom' package.\n")
+    
     duplicates = 0
     percent_complete = 10
     reads = infile.subsample(n)
-
-    if args.count_duplicates:
-        from pybloom import ScalableBloomFilter
 
     for read in reads:
         if isinstance(read, Sam):
