@@ -290,12 +290,12 @@ def run(args):
                                                                    value=cycle_nuc[position][base]))
     for i in range(101):
         sys.stdout.write("{row}\t{column}\t{pos:n}\t{value:n}\n".format(row=sample_name,
-                                                               column='read_gc' + str(i),
+                                                               column='read_gc', pos=i,
                                                                value=cycle_gc[i]))
 
     for kmer, obs_exp in sorted(observed_expected.items(), key=lambda x: x[1]):
-        sys.stdout.write("{row}\t{column}\t{pos:n}\t{value:n}\n".format(row=sample_name,
-                                                               column=kmer,
+        sys.stdout.write("{row}\t{column}\t{pos}\t{value:n}\n".format(row=sample_name,
+                                                               column=kmer, pos='None'
                                                                value=obs_exp))
 
     if args.count_duplicates:
