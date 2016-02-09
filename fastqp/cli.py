@@ -42,7 +42,7 @@ def run(args):
         sample_name = args.name
     else:
         sample_name = args.input.name
-        
+
     # estimate the number of lines in args.input if we can
     if ext in ['.fastq','.fq']:
         with FastqReader(open(args.input.name)) as fh:
@@ -129,14 +129,14 @@ def run(args):
                       'G': defaultdict(lambda: defaultdict(int)),
                       'A': defaultdict(lambda: defaultdict(int)),
                       'T': defaultdict(lambda: defaultdict(int))}
-                      
+
     if args.count_duplicates:
         try:
             from pybloom import ScalableBloomFilter
             bloom_filter = ScalableBloomFilter(mode=ScalableBloomFilter.SMALL_SET_GROWTH)
         except ImportError:
             sys.exit("--count-duplicates option requires 'pybloom' package.\n")
-    
+
     duplicates = 0
     percent_complete = 10
     reads = infile.subsample(n)
@@ -255,51 +255,51 @@ def run(args):
         if abs(slope) > 2 and p_value < 0.05:
             bad_kmers.append((kmer, slope, p_value))
     bad_kmers = sorted(bad_kmers, key=lambda x: x[2])[:10]
-    
+    cycle_gc = [sum([cycle_nuc[i]['C'], cycle_nuc[i]['G']]) / sum([cycle_nuc[i]['C'],
+                                                              cycle_nuc[i]['G'],
+                                                              cycle_nuc[i]['A'],
+                                                              cycle_nuc[i]['T']]) * 100 for i in positions]
 
     # see http://vita.had.co.nz/papers/tidy-data.pdf
-    sys.stdout.write("{row}\t{column}\t{value}\n".format(row=sample_name,
-                                                         column='reads',
-                                                         value=act_nlines))
-   
+    sys.stdout.write("{row}\t{column}\t{pos}\t{value:n}\n".format(row=sample_name, column='reads', pos='None', value=act_nlines))
+
     for cycle, count in read_len.items():
-        sys.stdout.write("{row}\t{column}\t{value:n}\n".format(row=sample_name,
-                                                               column='cycle_' + str(cycle),
+        sys.stdout.write("{row}\t{column}\t{pos:n}\t{value:n}\n".format(row=sample_name, column='read_len', pos=cycle,
                                                                value=count))
 
     for i, position in enumerate(positions):
-        sys.stdout.write("{row}\t{column}\t{value:n}\n".format(row=sample_name,
-                                                               column=str(position) + '_q05',
+        sys.stdout.write("{row}\t{column}\t{pos:n}\t{value:n}\n".format(row=sample_name,
+                                                               column='q05', pos=position,
                                                                value=quantiles[i][0]))
-        sys.stdout.write("{row}\t{column}\t{value:n}\n".format(row=sample_name,
-                                                               column=str(position) + '_q25',
+        sys.stdout.write("{row}\t{column}\t{pos:n}\t{value:n}\n".format(row=sample_name,
+                                                               column='q25', pos=position,
                                                                value=quantiles[i][1]))
-        sys.stdout.write("{row}\t{column}\t{value:n}\n".format(row=sample_name,
-                                                               column=str(position) + '_q50',
+        sys.stdout.write("{row}\t{column}\t{pos:n}\t{value:n}\n".format(row=sample_name,
+                                                               column='q50', pos=position,
                                                                value=quantiles[i][2]))
-        sys.stdout.write("{row}\t{column}\t{value:n}\n".format(row=sample_name,
-                                                               column=str(position) + '_q75',
+        sys.stdout.write("{row}\t{column}\t{pos:n}\t{value:n}\n".format(row=sample_name,
+                                                               column='q75', pos=position,
                                                                value=quantiles[i][3]))
-        sys.stdout.write("{row}\t{column}\t{value:n}\n".format(row=sample_name,
-                                                               column=str(position) + '_q95',
+        sys.stdout.write("{row}\t{column}\t{pos:n}\t{value:n}\n".format(row=sample_name,
+                                                               column='q95', pos=position,
                                                                value=quantiles[i][4]))
     for base in bases:
         for position in positions:
-            sys.stdout.write("{row}\t{column}\t{value:n}\n".format(row=sample_name,
-                                                                   column=base + str(position),
+            sys.stdout.write("{row}\t{column}\t{pos:n}\t{value:n}\n".format(row=sample_name,
+                                                                   column=base, pos=position,
                                                                    value=cycle_nuc[position][base]))
     for i in range(101):
-        sys.stdout.write("{row}\t{column}\t{value:n}\n".format(row=sample_name,
-                                                               column='read_gc_' + str(i),
-                                                               value=cycle_gc[i]))    
+        sys.stdout.write("{row}\t{column}\t{pos:n}\t{value:n}\n".format(row=sample_name,
+                                                               column='read_gc' + str(i),
+                                                               value=cycle_gc[i]))
 
     for kmer, obs_exp in sorted(observed_expected.items(), key=lambda x: x[1]):
-        sys.stdout.write("{row}\t{column}\t{value:n}\n".format(row=sample_name,
+        sys.stdout.write("{row}\t{column}\t{pos:n}\t{value:n}\n".format(row=sample_name,
                                                                column=kmer,
-                                                               value=obs_exp))    
+                                                               value=obs_exp))
 
     if args.count_duplicates:
-        sys.stdout.write("0\tpct_duplicate\t{0:.2%}\n".format(duplicates/act_nlines))
+        sys.stdout.write("{row}\t{column}\t{pos}\t{value:n}\n".format(row=sample_name, column='duplicate', pos='None', value=duplicates/act_nlines))
 
     from zipfile import ZipFile
     with ZipFile(args.output + '.zip', mode='w') as zip_archive:
@@ -308,7 +308,7 @@ def run(args):
         median_qual = qualdist(cycle_qual.values(), zip_archive, fig_kw)
         qualmap(cycle_qual, zip_archive, fig_kw)
         depthplot(read_len, zip_archive, fig_kw)
-        gcplot(positions, cycle_nuc, zip_archive, fig_kw)
+        gcplot(positions, cycle_gc, zip_archive, fig_kw)
         gcdist(cycle_gc, zip_archive, fig_kw)
         nucplot(positions, bases, cycle_nuc, zip_archive, fig_kw)
         kmerplot(positions, cycle_kmers, zip_archive, [fields[0] for fields in bad_kmers], fig_kw)
@@ -337,7 +337,7 @@ def main():
     parser.add_argument('-s', '--binsize', type=int, help='number of reads to bin for sampling (default: auto)')
     parser.add_argument('-a', '--name', type=str, help='sample name identifier for text and graphics output (default: input file name)')
     parser.add_argument('-n', '--nreads', type=int, default=2000000, help='number of reads sample from input (default: %(default)s)')
-    parser.add_argument('-p', '--base-probs', type=str, default='0.25,0.25,0.25,0.25,0.1', help='probabilites for observing A,T,C,G,N in reads (default: %(default)s)')    
+    parser.add_argument('-p', '--base-probs', type=str, default='0.25,0.25,0.25,0.25,0.1', help='probabilites for observing A,T,C,G,N in reads (default: %(default)s)')
     parser.add_argument('-k', '--kmer', type=int, default=5, choices=range(2, 8), help='length of kmer for over-repesented kmer counts (default: %(default)s)')
     parser.add_argument('-o', '--output', type=str, default='fastqp_figures', help="base name for output files (default: %(default)s)")
     parser.add_argument('-t', '--type', type=str, default=None, choices=['fastq', 'gz', 'sam', 'bam'], help="file type (default: auto)")

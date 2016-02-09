@@ -403,14 +403,10 @@ def depthplot(lengths, filename, fig_kw):
     axes.set_title('Read lengths distribution')
     axes.set_xlabel('Cycle')
     axes.set_ylabel('Number of reads at cycle')
-    add_figure_to_archive(fig, filename, 'read_length_distribution.png')    
+    add_figure_to_archive(fig, filename, 'read_length_distribution.png')
 
-def gcplot(positions, counts, filename, fig_kw):
+def gcplot(positions, cycle_gc, filename, fig_kw):
     fig, axes = plt.subplots(nrows=1, **fig_kw)
-    cycle_gc = [sum([counts[i]['C'], counts[i]['G']]) / sum([counts[i]['C'],
-                                                              counts[i]['G'],
-                                                              counts[i]['A'],
-                                                              counts[i]['T']]) * 100 for i in positions]
     axes.plot(positions, cycle_gc, color=(0.1,0.6,0.8))
     x1,x2,y1,y2 = axes.axis()
     axes.axis((x1,x2,0,100))
@@ -514,7 +510,7 @@ def adaptermerplot(positions, counts, adapters, filename, fig_kw):
     top_kmers = [x[0] for x in kmer_sums.most_common(9)]
     cmap = mpl.cm.get_cmap(name='Set1')
     colors = [cmap(i) for i in np.linspace(0, 1, len(top_kmers))]
-    mpl.rc('axes', color_cycle=colors)    
+    mpl.rc('axes', color_cycle=colors)
     fig, axes = plt.subplots(nrows=1, subplot_kw={'axis_bgcolor':'white'}, **fig_kw)
     kmer_percent = defaultdict(lambda: defaultdict(int))
     for pos, count in tuple(counts.items()):
@@ -544,7 +540,7 @@ def adaptermerplot(positions, counts, adapters, filename, fig_kw):
     for label in legend.get_texts():
         label.set_color('black')
     add_figure_to_archive(fig, filename, 'cycle_specific_potiential_adapter_kmers.png')
-    
+
 def mismatchplot(positions, counts, filename, fig_kw):
     cmap = mpl.cm.get_cmap(name='Set1')
     colors = [cmap(i) for i in np.linspace(0, 1, 12)]
