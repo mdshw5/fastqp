@@ -288,6 +288,10 @@ def run(args):
             sys.stdout.write("{row}\t{column}\t{pos:n}\t{value:n}\n".format(row=sample_name,
                                                                    column=base, pos=position,
                                                                    value=cycle_nuc[position][base]))
+    for position in positions:
+        sys.stdout.write("{row}\t{column}\t{pos:n}\t{value:n}\n".format(row=sample_name,
+                                                               column='cycle_gc', pos=position,
+                                                               value=cycle_gc[position]))
     for i in range(101):
         sys.stdout.write("{row}\t{column}\t{pos:n}\t{value:n}\n".format(row=sample_name,
                                                                column='read_gc', pos=i,
@@ -301,6 +305,7 @@ def run(args):
     if args.count_duplicates:
         sys.stdout.write("{row}\t{column}\t{pos}\t{value:n}\n".format(row=sample_name, column='duplicate', pos='None', value=duplicates/act_nlines))
 
+
     from zipfile import ZipFile
     with ZipFile(args.output + '.zip', mode='w') as zip_archive:
         fig_kw = {'figsize':(8, 6)}
@@ -308,7 +313,7 @@ def run(args):
         median_qual = qualdist(cycle_qual.values(), zip_archive, fig_kw)
         qualmap(cycle_qual, zip_archive, fig_kw)
         depthplot(read_len, zip_archive, fig_kw)
-        gcplot(positions, cycle_gc, zip_archive, fig_kw)
+        gcplot(positions, pos_gc, zip_archive, fig_kw)
         gcdist(cycle_gc, zip_archive, fig_kw)
         nucplot(positions, bases, cycle_nuc, zip_archive, fig_kw)
         kmerplot(positions, cycle_kmers, zip_archive, [fields[0] for fields in bad_kmers], fig_kw)
