@@ -255,7 +255,7 @@ def run(args):
         if abs(slope) > 2 and p_value < 0.05:
             bad_kmers.append((kmer, slope, p_value))
     bad_kmers = sorted(bad_kmers, key=lambda x: x[2])[:10]
-    cycle_gc = [sum([cycle_nuc[i]['C'], cycle_nuc[i]['G']]) / sum([cycle_nuc[i]['C'],
+    pos_gc = [sum([cycle_nuc[i]['C'], cycle_nuc[i]['G']]) / sum([cycle_nuc[i]['C'],
                                                               cycle_nuc[i]['G'],
                                                               cycle_nuc[i]['A'],
                                                               cycle_nuc[i]['T']]) * 100 for i in positions]
