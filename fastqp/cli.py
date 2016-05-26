@@ -25,8 +25,8 @@ class Bunch(object):
 def run(arguments):
     """ read FASTQ or SAM and tabulate basic metrics
     arguments is a dictionary so that we can call this as a function """
-    arguments['input'] = argparse.FileType('r', arguments['input'])
-    arguments['text'] = argparse.FileType('w', arguments['text'])
+    arguments['input'] = argparse.FileType('r')(arguments['input'])
+    arguments['text'] = argparse.FileType('w')(arguments['text'])
     args = Bunch(arguments)  # convert back to an argparse namespace
     time_start = time.time()
     if args.input.name != '<stdin>':
