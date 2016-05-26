@@ -18,9 +18,14 @@ from scipy import stats
 from operator import mul
 from six.moves import reduce
 
+class Bunch(object):
+  def __init__(self, adict):
+    self.__dict__.update(adict)
 
-def run(args):
-    """ read FASTQ or SAM and tabulate basic metrics """
+def run(arguments):
+    """ read FASTQ or SAM and tabulate basic metrics
+    arguments is a dictionary so that we can call this as a function """
+    args = Bunch(arguments)  # convert back to an argparse namespace
     time_start = time.time()
     if args.input.name != '<stdin>':
         bsize = os.path.getsize(args.input.name)
@@ -355,7 +360,8 @@ def main():
     parser.add_argument('-d', '--count-duplicates', action="store_true", default=False, help="calculate sequence duplication rate (default: %(default)s)")
 
     args = parser.parse_args()
-    run(args)
+    arguments = vars(args)
+    run(arguments)
 
 if __name__ == "__main__":
     main()
