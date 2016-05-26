@@ -1,7 +1,7 @@
 language: python
 sudo: false
 addons:
-  apt:	
+  apt:
     packages:
       - libatlas-dev
       - libatlas
