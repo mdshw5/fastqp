@@ -25,6 +25,8 @@ class Bunch(object):
 def run(arguments):
     """ read FASTQ or SAM and tabulate basic metrics
     arguments is a dictionary so that we can call this as a function """
+    arguments['input'] = argparse.FileType('r', arguments['input'])
+    arguments['text'] = argparse.FileType('w', arguments['text'])
     args = Bunch(arguments)  # convert back to an argparse namespace
     time_start = time.time()
     if args.input.name != '<stdin>':
@@ -342,18 +344,20 @@ def run(arguments):
 
 def main():
     parser = argparse.ArgumentParser(prog='fastqp', description="simple NGS read quality assessment using Python")
-    parser.add_argument('input', type=argparse.FileType('r'), help="input file (one of .sam, .bam, .fq, or .fastq(.gz) or stdin (-))")
+    parser.add_argument('input', type=str, help="input file (one of .sam, .bam, .fq, or .fastq(.gz) or stdin (-))")
     parser.add_argument('-q', '--quiet', action="store_true", default=False, help="do not print any messages (default: %(default)s)")
     parser.add_argument('-s', '--binsize', type=int, help='number of reads to bin for sampling (default: auto)')
     parser.add_argument('-a', '--name', type=str, help='sample name identifier for text and graphics output (default: input file name)')
     parser.add_argument('-n', '--nreads', type=int, default=2000000, help='number of reads sample from input (default: %(default)s)')
     parser.add_argument('-p', '--base-probs', type=str, default='0.25,0.25,0.25,0.25,0.1', help='probabilites for observing A,T,C,G,N in reads (default: %(default)s)')
     parser.add_argument('-k', '--kmer', type=int, default=5, choices=range(2, 8), help='length of kmer for over-repesented kmer counts (default: %(default)s)')
-    parser.add_argument('-o', '--output', type=str, default='fastqp_figures', help="base name for output files (default: %(default)s)")
+    parser.add_argument('-o', '--output', type=str, default='fastqp_figures', help="base name for output figures (default: %(default)s)")
+    parser.add_argument('-e', '--text', type=str, default='-', help="file name for text output (default: %(default)s)")
     parser.add_argument('-t', '--type', type=str, default=None, choices=['fastq', 'gz', 'sam', 'bam'], help="file type (default: auto)")
     parser.add_argument('-ll', '--leftlimit', type=int, default=1, help="leftmost cycle limit (default: %(default)s)")
     parser.add_argument('-rl', '--rightlimit', type=int, default=-1, help="rightmost cycle limit (-1 for none) (default: %(default)s)")
     parser.add_argument('-mq', '--median-qual', type=int, default=30, help="median quality threshold for failing QC (default: %(default)s)")
+
     align_group = parser.add_mutually_exclusive_group()
     align_group.add_argument('--aligned-only', action="store_true", default=False, help="only aligned reads (default: %(default)s)")
     align_group.add_argument('--unaligned-only', action="store_true", default=False, help="only unaligned reads (default: %(default)s)")
