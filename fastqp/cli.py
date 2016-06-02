@@ -268,49 +268,49 @@ def run(arguments):
                                                               cycle_nuc[i]['T']]) * 100 for i in positions]
 
     # see http://vita.had.co.nz/papers/tidy-data.pdf
-    sys.stdout.write("{row}\t{column}\t{pos}\t{value:n}\n".format(row=sample_name, column='reads', pos='None', value=act_nlines))
+    args.text.write("{row}\t{column}\t{pos}\t{value:n}\n".format(row=sample_name, column='reads', pos='None', value=act_nlines))
 
     for cycle, count in read_len.items():
-        sys.stdout.write("{row}\t{column}\t{pos:n}\t{value:n}\n".format(row=sample_name, column='read_len', pos=cycle,
+        args.text.write("{row}\t{column}\t{pos:n}\t{value:n}\n".format(row=sample_name, column='read_len', pos=cycle,
                                                                value=count))
 
     for i, position in enumerate(positions):
-        sys.stdout.write("{row}\t{column}\t{pos:n}\t{value:n}\n".format(row=sample_name,
+        args.text.write("{row}\t{column}\t{pos:n}\t{value:n}\n".format(row=sample_name,
                                                                column='q05', pos=position,
                                                                value=quantiles[i][0]))
-        sys.stdout.write("{row}\t{column}\t{pos:n}\t{value:n}\n".format(row=sample_name,
+        args.text.write("{row}\t{column}\t{pos:n}\t{value:n}\n".format(row=sample_name,
                                                                column='q25', pos=position,
                                                                value=quantiles[i][1]))
-        sys.stdout.write("{row}\t{column}\t{pos:n}\t{value:n}\n".format(row=sample_name,
+        args.text.write("{row}\t{column}\t{pos:n}\t{value:n}\n".format(row=sample_name,
                                                                column='q50', pos=position,
                                                                value=quantiles[i][2]))
-        sys.stdout.write("{row}\t{column}\t{pos:n}\t{value:n}\n".format(row=sample_name,
+        args.text.write("{row}\t{column}\t{pos:n}\t{value:n}\n".format(row=sample_name,
                                                                column='q75', pos=position,
                                                                value=quantiles[i][3]))
-        sys.stdout.write("{row}\t{column}\t{pos:n}\t{value:n}\n".format(row=sample_name,
+        args.text.write("{row}\t{column}\t{pos:n}\t{value:n}\n".format(row=sample_name,
                                                                column='q95', pos=position,
                                                                value=quantiles[i][4]))
     for base in bases:
         for position in positions:
-            sys.stdout.write("{row}\t{column}\t{pos:n}\t{value:n}\n".format(row=sample_name,
+            args.text.write("{row}\t{column}\t{pos:n}\t{value:n}\n".format(row=sample_name,
                                                                    column=base, pos=position,
                                                                    value=cycle_nuc[position][base]))
     for position in positions:
-        sys.stdout.write("{row}\t{column}\t{pos:n}\t{value:n}\n".format(row=sample_name,
+        args.text.write("{row}\t{column}\t{pos:n}\t{value:n}\n".format(row=sample_name,
                                                                column='cycle_gc', pos=position,
                                                                value=cycle_gc[position]))
     for i in range(101):
-        sys.stdout.write("{row}\t{column}\t{pos:n}\t{value:n}\n".format(row=sample_name,
+        args.text.write("{row}\t{column}\t{pos:n}\t{value:n}\n".format(row=sample_name,
                                                                column='read_gc', pos=i,
                                                                value=cycle_gc[i]))
 
     for kmer, obs_exp in sorted(observed_expected.items(), key=lambda x: x[1]):
-        sys.stdout.write("{row}\t{column}\t{pos}\t{value:n}\n".format(row=sample_name,
+        args.text.write("{row}\t{column}\t{pos}\t{value:n}\n".format(row=sample_name,
                                                                column=kmer, pos='None',
                                                                value=obs_exp))
 
     if args.count_duplicates:
-        sys.stdout.write("{row}\t{column}\t{pos}\t{value:n}\n".format(row=sample_name, column='duplicate', pos='None', value=duplicates/act_nlines))
+        args.text.write("{row}\t{column}\t{pos}\t{value:n}\n".format(row=sample_name, column='duplicate', pos='None', value=duplicates/act_nlines))
 
 
     from zipfile import ZipFile
