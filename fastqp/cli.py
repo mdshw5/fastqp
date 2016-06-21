@@ -109,7 +109,9 @@ def run(arguments):
         if not args.quiet:
             sys.stderr.write("Reading from <stdin>, bin size (-s) set to {binsize:n}.\n".format(binsize=n))
         est_nlines = None
-    if est_nlines is not None:
+    if est_nlines == 0:
+        sys.exit("The input file appears empty. Please check the file for data.")
+    elif est_nlines is not None:
         # set up factor for sampling bin size
         if args.binsize:
             n = args.binsize
