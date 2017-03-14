@@ -4,9 +4,7 @@ addons:
   apt:
     packages:
       - libatlas-dev
-      - libatlas
       - liblapack-dev
-      - liblapack
       - gfortran
 python:
 - '3.4'
