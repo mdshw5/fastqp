@@ -276,10 +276,17 @@ def run(arguments):
         if abs(slope) > 2 and p_value < 0.05:
             bad_kmers.append((kmer, slope, p_value))
     bad_kmers = sorted(bad_kmers, key=lambda x: x[2])[:10]
-    pos_gc = [sum([cycle_nuc[i]['C'], cycle_nuc[i]['G']]) / sum([cycle_nuc[i]['C'],
-                                                                 cycle_nuc[i]['G'],
-                                                                 cycle_nuc[i]['A'],
-                                                                 cycle_nuc[i]['T']]) * 100 for i in positions]
+
+    pos_gc = []
+    for i in positions:
+        try:
+            pg = sum([cycle_nuc[i]['C'], cycle_nuc[i]['G']]) / sum([cycle_nuc[i]['C'],
+                                                                    cycle_nuc[i]['G'],
+                                                                    cycle_nuc[i]['A'],
+                                                                    cycle_nuc[i]['T']]) * 100
+        except ZeroDivisionError:
+            pg = 0  # https://github.com/mdshw5/fastqp/issues/26
+        pos_gc.append(pg)
 
     # see http://vita.had.co.nz/papers/tidy-data.pdf
     args.text.write("{row}\t{column}\t{pos}\t{value:n}\n".format(
