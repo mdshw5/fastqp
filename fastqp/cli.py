@@ -319,8 +319,8 @@ def run(arguments):
                                                                            value=cycle_nuc[position][base]))
     for position in positions:
         args.text.write("{row}\t{column}\t{pos:n}\t{value:n}\n".format(row=sample_name,
-                                                                       column='cycle_gc', pos=position,
-                                                                       value=cycle_gc[position]))
+                                                                       column='pos_gc', pos=position,
+                                                                       value=pos_gc[position - 1]))
     for i in range(101):
         args.text.write("{row}\t{column}\t{pos:n}\t{value:n}\n".format(row=sample_name,
                                                                        column='read_gc', pos=i,
