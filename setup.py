@@ -4,7 +4,7 @@ from setuptools import setup
 setup(
         name = 'fastqp',
         provides = 'fastqp',
-        version = "0.2",
+        version = "0.3",
         author = 'Matthew Shirley',
         author_email = 'mdshw5@gmail.com',
         url = 'http://mattshirley.com',
@@ -14,14 +14,14 @@ setup(
         install_requires = ['six', 'matplotlib', 'numpy', 'simplesam', 'scipy'],
         entry_points = { 'console_scripts': [ 'fastqp = fastqp.cli:main' ] },
         classifiers = [
-                "Development Status :: 4 - Beta",
+                "Development Status :: 5 - Production/Stable",
                 "License :: OSI Approved :: MIT License",
                 "Environment :: Console",
                 "Intended Audience :: Science/Research",
                 "Natural Language :: English",
                 "Operating System :: Unix",
                 "Programming Language :: Python :: 2.7",
-                "Programming Language :: Python :: 3.4",
+                "Programming Language :: Python :: 3.6",
                 "Topic :: Scientific/Engineering :: Bio-Informatics"
         ]
 )
