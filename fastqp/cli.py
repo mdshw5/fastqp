@@ -366,7 +366,7 @@ def run(arguments):
                 "QualityWarning: median base quality score is %s.\n" % median_qual)
 
 
-def main():
+def main(ext_args=None):
     parser = argparse.ArgumentParser(
         prog='fastqp', description="simple NGS read quality assessment using Python")
     parser.add_argument(
@@ -404,7 +404,10 @@ def main():
     parser.add_argument('-d', '--count-duplicates', action="store_true", default=False,
                         help="calculate sequence duplication rate (default: %(default)s)")
 
-    args = parser.parse_args()
+    if ext_args:
+        args = parser.parse_args(ext_args)
+    else:
+        args = parser.parse_args()
     arguments = vars(args)
     run(arguments)
 
