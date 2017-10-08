@@ -484,8 +484,8 @@ def kmerplot(positions, counts, filename, top_kmers, fig_kw):
     all_kmers = [counts[k].keys() for k in sorted(counts.keys())]
     kmers = set(list(itertools.chain.from_iterable(all_kmers)))
     kmer_len = len(tuple(kmers)[0])
-    #kmer_sums = Counter(dict(zip(kmers, [sum([counts[pos].get(kmer, 0) for pos in positions]) for kmer in kmers])))
-    #top_kmers = [x[0] for x in kmer_sums.most_common(9)]
+    if not top_kmers:
+        top_kmers = [None]
     cmap = mpl.cm.get_cmap(name='Set1')
     colors = [cmap(i) for i in np.linspace(0, 1, len(top_kmers))]
     mpl.rcParams['axes.prop_cycle'] = mpl.cycler(color=colors)
