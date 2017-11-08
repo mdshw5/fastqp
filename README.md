@@ -12,11 +12,11 @@ Features
 - Works with (gzipped) FASTQ, SAM, and BAM formatted reads
 - Tabular, tidy, output statistics so you can create your own graphs
 - A useful set of default graphics rivaling comparable QC packages
-- Counts *all* IPUAC ambiguous nucleotide codes (NMWSKRY) if present in sequences
+- Counts *all* IUPAC ambiguous nucleotide codes (NMWSKRYVHDB) if present in sequences
 - Downsamples input files to around 2,000,000 reads (user adjustable)
-- Allows a 5' and 3' (left and right) cycle limit for graphics generation
+- Allows a 5′ and 3′ (left and right) cycle limit for graphics generation
 - Tracks kmers and sequence duplication for the *entire* input file
-- Plot base call reference mismatches for aligned reads
+- Plots base call reference mismatches for aligned reads
 - Optional sequence duplication calculation using Bloom filters (beta)
 
 Requirements
@@ -36,7 +36,7 @@ Note: BAM file support requires [samtools](https://github.com/samtools/samtools)
 Usage
 -----
 
-```shell
+```
 usage: fastqp [-h] [-q] [-s BINSIZE] [-a NAME] [-n NREADS] [-p BASE_PROBS] [-k {2,3,4,5,6,7}] [-o OUTPUT]
               [-ll LEFTLIMIT] [-rl RIGHTLIMIT] [-mq MEDIAN_QUAL] [--aligned-only | --unaligned-only] [-d]
               input
