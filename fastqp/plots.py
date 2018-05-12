@@ -18,6 +18,12 @@ except:
     from fastqp.backports import Counter
 import itertools
 from collections import defaultdict
+from distutils.version import LooseVersion
+
+if LooseVersion(mpl.__version__) <= '1.5.9':
+    legend_bg_color_kw = 'axis_bgcolor'
+else:
+    legend_bg_color_kw = 'facecolor'
 
 viridis_data = [[0.26700401, 0.00487433, 0.32941519], [
     0.26851048, 0.00960483, 0.33542652
@@ -379,7 +385,7 @@ def nucplot(positions, nucs, counts, filename, fig_kw):
     colors = [cmap(i) for i in np.linspace(0, 1, len(nuc_order))]
     mpl.rcParams['axes.prop_cycle'] = mpl.cycler(color=colors)
     fig, axes = plt.subplots(
-        nrows=1, subplot_kw={'facecolor': 'white'}, **fig_kw)
+        nrows=1, subplot_kw={legend_bg_color_kw: 'white'}, **fig_kw)
     nuc_percent = defaultdict(lambda: defaultdict(int))
     for pos, count in tuple(counts.items()):
         max_depth = sum(tuple(count.values()))
@@ -524,7 +530,7 @@ def kmerplot(positions, counts, filename, top_kmers, fig_kw):
     colors = [cmap(i) for i in np.linspace(0, 1, len(top_kmers))]
     mpl.rcParams['axes.prop_cycle'] = mpl.cycler(color=colors)
     fig, axes = plt.subplots(
-        nrows=1, subplot_kw={'facecolor': 'white'}, **fig_kw)
+        nrows=1, subplot_kw={legend_bg_color_kw: 'white'}, **fig_kw)
     kmer_percent = defaultdict(lambda: defaultdict(int))
     for pos, count in tuple(counts.items()):
         for kmer in kmers:
@@ -589,7 +595,7 @@ def adaptermerplot(positions, counts, adapters, filename, fig_kw):
     colors = [cmap(i) for i in np.linspace(0, 1, len(top_kmers))]
     mpl.rcParams['axes.prop_cycle'] = mpl.cycler(color=colors)
     fig, axes = plt.subplots(
-        nrows=1, subplot_kw={'facecolor': 'white'}, **fig_kw)
+        nrows=1, subplot_kw={legend_bg_color_kw: 'white'}, **fig_kw)
     kmer_percent = defaultdict(lambda: defaultdict(int))
     for pos, count in tuple(counts.items()):
         for kmer in kmers:
@@ -643,7 +649,7 @@ def mismatchplot(positions, counts, filename, fig_kw):
     colors = [cmap(i) for i in np.linspace(0, 1, 12)]
     mpl.rcParams['axes.prop_cycle'] = mpl.cycler(color=colors)
     fig, axes = plt.subplots(
-        nrows=1, subplot_kw={'facecolor': 'white'}, **fig_kw)
+        nrows=1, subplot_kw={legend_bg_color_kw: 'white'}, **fig_kw)
     ref_alt = []
     for ref in ['C', 'G', 'A', 'T']:
         for alt in set(['C', 'G', 'A', 'T']) - set([ref]):
