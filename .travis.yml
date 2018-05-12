@@ -7,10 +7,12 @@ addons:
       - liblapack-dev
       - gfortran
 python:
-- '3.4'
-- '2.7'
+  - '3.6'
+  - '2.7'
 install:
 - travis_wait pip install -e .
+before_script:
+  - 
 script: nosetests
 deploy:
   provider: pypi
