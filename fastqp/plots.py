@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 import matplotlib.mlab as mlab
 import scipy.stats
 from matplotlib.colors import LinearSegmentedColormap
+from cycler import cycler
 from six.moves import map
 from six import BytesIO
 try:
@@ -383,7 +384,7 @@ def nucplot(positions, nucs, counts, filename, fig_kw):
     max_depth = sum(tuple(counts[1].values()))
     cmap = mpl.cm.get_cmap(name='Set1')
     colors = [cmap(i) for i in np.linspace(0, 1, len(nuc_order))]
-    mpl.rcParams['axes.prop_cycle'] = mpl.cycler(color=colors)
+    mpl.rcParams['axes.prop_cycle'] = cycler(color=colors)
     fig, axes = plt.subplots(
         nrows=1, subplot_kw={legend_bg_color_kw: 'white'}, **fig_kw)
     nuc_percent = defaultdict(lambda: defaultdict(int))
@@ -528,7 +529,7 @@ def kmerplot(positions, counts, filename, top_kmers, fig_kw):
         top_kmers = [None]
     cmap = mpl.cm.get_cmap(name='Set1')
     colors = [cmap(i) for i in np.linspace(0, 1, len(top_kmers))]
-    mpl.rcParams['axes.prop_cycle'] = mpl.cycler(color=colors)
+    mpl.rcParams['axes.prop_cycle'] = cycler(color=colors)
     fig, axes = plt.subplots(
         nrows=1, subplot_kw={legend_bg_color_kw: 'white'}, **fig_kw)
     kmer_percent = defaultdict(lambda: defaultdict(int))
