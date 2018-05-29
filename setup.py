@@ -3,14 +3,14 @@ from setuptools import setup
 setup(
     name='fastqp',
     provides='fastqp',
-    version="0.3.3",
+    version="0.3.4",
     author='Matthew Shirley',
     author_email='mdshw5@gmail.com',
     url='http://mattshirley.com',
     description='Simple NGS read quality assessment using Python',
     license='MIT',
     packages=['fastqp', 'fastqp.backports'],
-    install_requires=['six', 'matplotlib', 'numpy', 'simplesam', 'scipy'],
+    install_requires=['six', 'matplotlib', 'numpy', 'simplesam', 'scipy', 'cycler'],
     entry_points={'console_scripts': ['fastqp = fastqp.cli:main']},
     classifiers=[
         "Development Status :: 5 - Production/Stable",
