@@ -45,6 +45,8 @@ def run(arguments):
             sys.exit("Left limit must be less than right limit.\n")
     if args.type:
         ext = '.' + args.type
+    else:
+        ext = ext.lower()
     if ext not in ['.fq', '.fastq', '.sam', '.bam', '.gz'] and args.input.name != '<stdin>':
         sys.exit("Input file must end in either .sam, .bam, .fastq, or .fastq.gz\n")
 
