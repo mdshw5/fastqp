@@ -34,7 +34,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -e . pytest
       - name: Run tests
-        run: pytest -q
+        run: pytest -q --doctest-modules
 
   publish:
     name: Publish to PyPI
