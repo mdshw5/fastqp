@@ -34,7 +34,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -e . pytest
       - name: Run tests
-        run: pytest -q --doctest-modules
+        run: pytest --doctest-modules fastqp/__init__.py tests
 
   publish:
     name: Publish to PyPI
