@@ -21,7 +21,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install system deps
-        run: sudo apt-get update && sudo apt-get install -y libatlas-dev liblapack-dev gfortran
+        run: sudo apt-get update && sudo apt-get install -y libatlas-base-dev liblapack-dev gfortran
       - name: Cache pip
         uses: actions/cache@v4
         with:
