@@ -308,7 +308,7 @@ def qualplot(positions, quantiles, filename, fig_kw):
     ax.axis((x1, x2, 0, max(Q4)))
     box = ax.get_position()
     ax.set_position([box.x0, box.y0, box.width, box.height])
-    ax.yaxis.grid(b=True, which='major', **{'color': 'gray', 'linestyle': ':'})
+    ax.yaxis.grid(visible=True, which='major', **{'color': 'gray', 'linestyle': ':'})
     ax.legend(
         ('100-75%', '75-50%', '50-25%', '25-0%', 'Median'),
         bbox_to_anchor=(0, 0.25),
@@ -329,7 +329,7 @@ def qualdist(qualities, filename, fig_kw):
         counts += value
     x, y = zip(*sorted(counts.items(), key=lambda x: x[0]))
     ax.bar([_ - 1 for _ in x], y, color=(0.1, 0.6, 0.8))
-    ax.yaxis.grid(b=True, which='major', **{'color': 'gray', 'linestyle': ':'})
+    ax.yaxis.grid(visible=True, which='major', **{'color': 'gray', 'linestyle': ':'})
     ax.set_axisbelow(True)
     x1, x2, y1, y2 = ax.axis()
     ax.axis((x1, max(x), 0, y2))
@@ -403,7 +403,7 @@ def nucplot(positions, nucs, counts, filename, fig_kw):
     box = axes.get_position()
     axes.set_position([box.x0, box.y0, box.width, box.height])
     axes.yaxis.grid(
-        b=True, which='major', **{
+        visible=True, which='major', **{
             'color': 'gray',
             'linestyle': ':'
         })
@@ -432,7 +432,7 @@ def depthplot(lengths, filename, fig_kw):
     x = tuple(range(max_len + 1))
     axes.bar(x, [lengths[n] for n in x], color=(0.1, 0.6, 0.8))
     axes.yaxis.grid(
-        b=True, which='major', **{
+        visible=True, which='major', **{
             'color': 'gray',
             'linestyle': ':'
         })
@@ -448,7 +448,7 @@ def gcplot(positions, cycle_gc, filename, fig_kw):
     x1, x2, y1, y2 = axes.axis()
     axes.axis((x1, x2, 0, 100))
     axes.yaxis.grid(
-        b=True, which='major', **{
+        visible=True, which='major', **{
             'color': 'gray',
             'linestyle': ':'
         })
@@ -487,7 +487,7 @@ def gcdist(counts, filename, fig_kw):
                 [label for i, label in enumerate(labels)
                  if i in display] + ['Actual', 'Theoretical'])
     axes.yaxis.grid(
-        b=True, which='major', **{
+        visible=True, which='major', **{
             'color': 'gray',
             'linestyle': ':'
         })
@@ -510,7 +510,7 @@ def mbiasplot(positions, conv_dict, filename, fig_kw):
     x1, x2, y1, y2 = axes.axis()
     axes.axis((x1, x2, 0, 1))
     axes.yaxis.grid(
-        b=True, which='major', **{
+        visible=True, which='major', **{
             'color': 'gray',
             'linestyle': ':'
         })
@@ -555,7 +555,7 @@ def kmerplot(positions, counts, filename, top_kmers, fig_kw):
     box = axes.get_position()
     axes.set_position([box.x0, box.y0, box.width * 0.9, box.height])
     axes.yaxis.grid(
-        b=True, which='major', **{
+        visible=True, which='major', **{
             'color': 'gray',
             'linestyle': ':'
         })
@@ -620,7 +620,7 @@ def adaptermerplot(positions, counts, adapters, filename, fig_kw):
     box = axes.get_position()
     axes.set_position([box.x0, box.y0, box.width * 0.9, box.height])
     axes.yaxis.grid(
-        b=True, which='major', **{
+        visible=True, which='major', **{
             'color': 'gray',
             'linestyle': ':'
         })
@@ -663,7 +663,7 @@ def mismatchplot(positions, counts, filename, fig_kw):
     box = axes.get_position()
     axes.set_position([box.x0, box.y0, box.width, box.height])
     axes.yaxis.grid(
-        b=True, which='major', **{
+        visible=True, which='major', **{
             'color': 'gray',
             'linestyle': ':'
         })
