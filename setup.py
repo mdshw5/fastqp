@@ -3,7 +3,7 @@ from setuptools import setup
 setup(
     name='fastqp',
     provides='fastqp',
-    version="0.3.4",
+    version="0.3.5",
     author='Matthew Shirley',
     author_email='mdshw5@gmail.com',
     url='http://mattshirley.com',
